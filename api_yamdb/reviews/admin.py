@@ -1,3 +1,6 @@
 from django.contrib import admin
+from .models import Review, Comments
 
-# Register your models here.
+
+admin.site.register(Review)
+admin.site.register(Comments)
