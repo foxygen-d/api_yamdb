@@ -34,13 +34,13 @@ class Review(models.Model):
     title = models.ForeignKey(
         'Title',
         on_delete=models.CASCADE,
-        related_name='title',
+        related_name='reviews',
         verbose_name='Произведение',
     )
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        related_name='author',
+        related_name='reviews',
         verbose_name='Автор',
     )
     text = models.TextField('Текст отзыва', help_text='Новый отзыв')
@@ -69,19 +69,19 @@ class Comments(models.Model):
     title = models.ForeignKey(
         'Title',
         on_delete=models.CASCADE,
-        related_name='title',
+        related_name='comments',
         verbose_name='Произведение',
     )
     review = models.ForeignKey(
         Review,
         on_delete=models.CASCADE,
-        related_name='title',
+        related_name='comments',
         verbose_name='Отзыв',
     )
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        related_name='author',
+        related_name='comments',
         verbose_name='Автор',
     )
     text = models.TextField('Текст комментария', help_text='Новый комментарий')
