@@ -1,6 +1,8 @@
-from typing import List, Tuple
+import os
+from typing import Dict, List
 
 from django.apps import AppConfig
+from django.conf import settings
 from django.db.models.signals import post_migrate
 
 
@@ -8,21 +10,26 @@ class ReviewsConfig(AppConfig):
     name = 'reviews'
     verbose_name = name.capitalize()
 
-    def generate_dummy_objects(self) -> None:
+    def generate_dummy_objects(self, sender, **kwargs) -> None:
 
-        def get_csv_data(*args) -> List[Tuple]:
+        from django.contrib.auth.models import Group
+
+        def get_csv_data(*args) -> List[Dict]:
             import csv
-            with open('api_yamdb/static/data/users.csv', 'r') as file:
+            base_dir = settings.BASE_DIR
+            with open(os.path.join(base_dir, 'static/data/users.csv'), 'r') as file:
                 csv_dict = csv.DictReader(file)
                 to_db = [
-                    tuple([row.get(attr) for attr in row]) for row in csv_dict
+                    {attr: row.get(attr) for attr in row} for row in csv_dict
                 ]
             return to_db
 
         User = self.get_model('User')
-        data = get_csv_data('id', 'username', 'email', 'role', 'bio', 'first_name', 'last_name')
+        data = get_csv_data('id', 'username', 'email', 'role',
+                            'bio', 'first_name', 'last_name')
         for payload in data:
-            User.objects.get_or_create(*payload)
+            payload['role'] = Group.objects.get(name=payload['role'])
+            User.objects.get_or_create(**payload)
 
     def setup_permissions(self, sender, **kwargs) -> None:
         """Get and set permissions for the groups that should have them."""
@@ -68,4 +75,5 @@ class ReviewsConfig(AppConfig):
     def ready(self) -> None:
 
         post_migrate.connect(self.setup_permissions, sender=self)
+        post_migrate.connect(self.generate_dummy_objects, sender=self)
         return super().ready()

@@ -64,7 +64,7 @@ class Review(models.Model):
         return f'Отзыв на {self.title}, оценка: {self.score}'
 
 
-class Comments(models.Model):
+class Comment(models.Model):
     """Модель для комментариев."""
     title = models.ForeignKey(
         'Title',
@@ -97,3 +97,7 @@ class Comments(models.Model):
 
     def __str__(self):
         return f'Комментарий к произведению {self.title}'
+
+
+class Title(models.Model):
+    pass
