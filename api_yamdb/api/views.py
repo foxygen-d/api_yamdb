@@ -3,7 +3,7 @@ from rest_framework import filters, permissions, viewsets
 from rest_framework.pagination import LimitOffsetPagination
 
 from reviews.models import User, Review, Comment
-from .serializers import ReviewSerializer, CommentsSerializer
+from .serializers import ReviewSerializer, CommentSerializer
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
@@ -22,9 +22,9 @@ class ReviewViewSet(viewsets.ModelViewSet):
         serializer.save(author=self.request.user, title=title)
 
 
-class CommentsViewSet(viewsets.ModelViewSet):
+class CommentViewSet(viewsets.ModelViewSet):
     """Представление для комментариев."""
-    serializer_class = CommentsSerializer
+    serializer_class = CommentSerializer
     permission_classes = [DjangoModelPermissionsOrAnonReadOnly]
     pagination_class = LimitOffsetPagination
 

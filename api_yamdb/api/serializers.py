@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from reviews.models import Review, Comments
+from reviews.models import Review, Comment
 
 
 class ReviewSerializer(serializers.ModelSerializer):
@@ -19,7 +19,7 @@ class ReviewSerializer(serializers.ModelSerializer):
         return value
 
 
-class CommentsSerializer(serializers.ModelSerializer):
+class CommentSerializer(serializers.ModelSerializer):
     """Сериализатор для комментариев."""
     author = serializers.SlugRelatedField(slug_field='username',
                                           read_only=True)
