@@ -1,9 +1,20 @@
-from django.shortcuts import get_object_or_404
-from rest_framework import filters, permissions, viewsets
+from rest_framework import viewsets, filters, permissions
 from rest_framework.pagination import LimitOffsetPagination
+from django.shortcuts import get_object_or_404
 
-from reviews.models import User, Review, Comment, Title
-from .serializers import ReviewSerializer, CommentsSerializer
+from reviews.models import User, Review, Comment, Title, Categories, Genres
+from .serializers import ReviewSerializer, CommentsSerializer, CategoriesSerializer, GenresSerializer
+from .mixins import CreateRetrieveDestroyViewSet
+from .permissions import IsAdminOrReadOnly
+
+
+class CategoriesViewSet(CreateRetrieveDestroyViewSet):
+    queryset = Categories.objects.all()
+    serializer_class = CategoriesSerializer
+    pagination_class = LimitOffsetPagination
+    filter_backends = (filters.SearchFilter,)
+    permission_classes = (IsAdminOrReadOnly,)
+    search_fields = ('name',)
 
 
 class ReviewViewSet(viewsets.ModelViewSet):

@@ -1,3 +1,5 @@
+from django.db import models
+
 from django.contrib.auth.models import Group, AbstractUser
 from django.db import models
 from django.contrib.auth import get_user_model
@@ -27,6 +29,40 @@ class User(AbstractUser):
         null=True,
         blank=True
     )
+    
+    
+class Titles(models.Model):
+    name = models.TextField()
+    year = models.DateTimeField(null=True, blank=True)
+    description = models.TextField()
+    category = models.ForeignKey(
+        Categories,
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True
+    )
+    genre = models.ForeignKey(
+        Genres,
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True
+    )
+    
+    
+class Categories(models.Model):
+    name = models.CharField(max_length=256)
+    slug = models.SlugField(unique=True)
+
+    def __str__(self):
+        return self.name
+
+
+class Genres(models.Model):
+    name = models.CharField(max_length=256)
+    slug = models.SlugField(unique=True)
+
+    def __str__(self):
+        return self.name
 
 
 class Review(models.Model):
@@ -97,7 +133,3 @@ class Comment(models.Model):
 
     def __str__(self):
         return f'Комментарий к произведению {self.title}'
-
-
-class Title(models.Model):
-    pass
