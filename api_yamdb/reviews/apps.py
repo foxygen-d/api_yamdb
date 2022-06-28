@@ -1,35 +1,50 @@
-import os
-from typing import Dict, List
-
 from django.apps import AppConfig
-from django.conf import settings
 from django.db.models.signals import post_migrate
+
+from reviews.utils import get_csv_data
 
 
 class ReviewsConfig(AppConfig):
     name = 'reviews'
     verbose_name = name.capitalize()
 
-    def generate_dummy_objects(self, sender, **kwargs) -> None:
+    def prepopulate_database(self, sender, **kwargs) -> None:
+        """fill database with data from included csv files"""
 
         from django.contrib.auth.models import Group
-
-        def get_csv_data(*args) -> List[Dict]:
-            import csv
-            base_dir = settings.BASE_DIR
-            with open(os.path.join(base_dir, 'static/data/users.csv'), 'r') as file:
-                csv_dict = csv.DictReader(file)
-                to_db = [
-                    {attr: row.get(attr) for attr in row} for row in csv_dict
-                ]
-            return to_db
-
         User = self.get_model('User')
-        data = get_csv_data('id', 'username', 'email', 'role',
-                            'bio', 'first_name', 'last_name')
-        for payload in data:
+        Genre = self.get_model('Genre')
+        Category = self.get_model('Category')
+        Title = self.get_model('Title')
+        Review = self.get_model('Review')
+        Comment = self.get_model('Comment')
+
+        user_data = get_csv_data(source='users')
+        for payload in user_data:
             payload['role'] = Group.objects.get(name=payload['role'])
             User.objects.get_or_create(**payload)
+
+        for model in (Genre, Category):
+            data = get_csv_data(source=model._meta.model_name)
+            for payload in data:
+                model.objects.get_or_create(**payload)
+
+        title_data = get_csv_data(source='titles')
+        for payload in title_data:
+            payload['category'] = Category.objects.get(id=payload['category'])
+            Title.objects.get_or_create(**payload)
+
+        review_data = get_csv_data(source=Review._meta.model_name)
+        for payload in review_data:
+            payload['author'] = User.objects.get(id=payload['author'])
+            if not Review.objects.filter(id=payload['id']).exists():
+                Review.objects.create(**payload)
+
+        comment_data = get_csv_data(source='comments')
+        for payload in comment_data:
+            payload['author'] = User.objects.get(id=payload['author'])
+            if not Comment.objects.filter(id=payload['id']).exists():
+                Comment.objects.create(**payload)
 
     def setup_permissions(self, sender, **kwargs) -> None:
         """Get and set permissions for the groups that should have them."""
@@ -75,5 +90,5 @@ class ReviewsConfig(AppConfig):
     def ready(self) -> None:
 
         post_migrate.connect(self.setup_permissions, sender=self)
-        post_migrate.connect(self.generate_dummy_objects, sender=self)
+        post_migrate.connect(self.prepopulate_database, sender=self)
         return super().ready()

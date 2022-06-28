@@ -13,7 +13,7 @@ class CategoriesViewSet(CreateRetrieveDestroyViewSet):
     serializer_class = CategoriesSerializer
     pagination_class = LimitOffsetPagination
     filter_backends = (filters.SearchFilter,)
-    permission_classes = (IsAdminOrReadOnly,)
+    permission_classes = [permissions.DjangoModelPermissions]
     search_fields = ('name',)
 
 
