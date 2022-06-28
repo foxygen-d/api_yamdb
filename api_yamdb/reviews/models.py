@@ -2,10 +2,8 @@ from django.db import models
 
 from django.contrib.auth.models import Group, AbstractUser
 from django.db import models
-from django.contrib.auth import get_user_model
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
-from django.urls import reverse
 
 
 class User(AbstractUser):
@@ -29,27 +27,27 @@ class User(AbstractUser):
         null=True,
         blank=True
     )
-    
-    
-class Titles(models.Model):
+
+
+class Title(models.Model):
     name = models.TextField()
     year = models.DateTimeField(null=True, blank=True)
     description = models.TextField()
     category = models.ForeignKey(
-        Categories,
+        'Category',
         on_delete=models.SET_NULL,
         blank=True,
         null=True
     )
     genre = models.ForeignKey(
-        Genres,
+        'Genre',
         on_delete=models.SET_NULL,
         blank=True,
         null=True
     )
-    
-    
-class Categories(models.Model):
+
+
+class Category(models.Model):
     name = models.CharField(max_length=256)
     slug = models.SlugField(unique=True)
 
@@ -57,7 +55,7 @@ class Categories(models.Model):
         return self.name
 
 
-class Genres(models.Model):
+class Genre(models.Model):
     name = models.CharField(max_length=256)
     slug = models.SlugField(unique=True)
 
@@ -84,7 +82,7 @@ class Review(models.Model):
         validators=[
             MinValueValidator(1, 'Ниже 1 оценку произведению ставить нельзя!'),
             MaxValueValidator(10, 'Выше 10 оценку произведению ставить нельзя!')
-            ],
+        ],
     )
     pub_date = models.DateTimeField(
         verbose_name='Дата публикации отзыва',
