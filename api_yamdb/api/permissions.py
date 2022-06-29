@@ -8,7 +8,7 @@ class IsAdminOrReadOnly(permissions.BasePermission):
             request.method in permissions.SAFE_METHODS
             or request.user.is_staff
         )
-        
+
 
 class IsAuthorOrReadOnly(permissions.BasePermission):
 

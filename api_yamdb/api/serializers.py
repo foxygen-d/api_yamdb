@@ -1,6 +1,31 @@
 from rest_framework import serializers
+from rest_framework_simplejwt.serializers import TokenObtainSerializer
 
 from reviews.models import Categories, Genres, Review, Comments
+
+
+class SignUpSerializer(serializers.ModelSerializer):
+    username = serializers.CharField()
+    email = serializers.EmailField()
+
+
+class CodeTokenObtainSerializer(TokenObtainSerializer):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.fields[self.username_field] = serializers.CharField()
+        self.fields["confirmation_code"] = serializers.CharField()
+
+    def validate(self, attrs):
+        authenticate_kwargs = {
+            self.username_field: attrs[self.username_field],
+            "confirmation_code": attrs["confirmation_code"],
+        }
+        try:
+            authenticate_kwargs["request"] = self.context["request"]
+        except KeyError:
+            pass
 
 
 class CategoriesSerializer(serializers.ModelSerializer):

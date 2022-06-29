@@ -1,11 +1,37 @@
-from rest_framework import viewsets, filters, permissions
-from rest_framework.pagination import LimitOffsetPagination
 from django.shortcuts import get_object_or_404
+from django.contrib.auth import get_user_model
+from rest_framework import viewsets, filters, permissions
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework.pagination import LimitOffsetPagination
+from rest_framework_simplejwt.views import TokenViewBase
 
 from reviews.models import User, Review, Comment, Title, Categories, Genres
-from .serializers import ReviewSerializer, CommentsSerializer, CategoriesSerializer, GenresSerializer
+from auth.models import ConfirmationCode
+from .serializers import (
+    ReviewSerializer, CommentsSerializer,
+    CategoriesSerializer, GenresSerializer,
+    CodeTokenObtainSerializer, SignUpSerializer)
 from .mixins import CreateRetrieveDestroyViewSet
-from .permissions import IsAdminOrReadOnly
+
+
+User = get_user_model()
+
+
+class SignUpView(APIView):
+
+    def post(self, request):
+        serializer = SignUpSerializer(data=request.data)
+        if serializer.is_valid():
+            user = User.objects.create(**serializer.validated_data)
+            ConfirmationCode.objects.create(username=user, value='???')
+            return Response(serializer.validated_data)
+        else:
+            return Response(serializer.errors)
+
+
+class TokenObtainAccessView(TokenViewBase):
+    serializer_class = CodeTokenObtainSerializer
 
 
 class CategoriesViewSet(CreateRetrieveDestroyViewSet):
