@@ -1,16 +1,13 @@
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
-from rest_framework_simplejwt.views import (
-    TokenObtainPairView,
-    TokenRefreshView)
 
-from .views import ReviewViewSet, CommentsViewSet
+from .views import (
+    ReviewViewSet, CommentsViewSet,
+    SignUpView, TokenObtainAccessView)
 
 
 v1_router = DefaultRouter()
-v1_router.register(
-    'v1/token/',
-    TokenObtainPairView, basename='token_obtain_pair')
+#v1_router.register('auth/signup/', SignUpView, basename='signup')
 v1_router.register(
     r'titles/(?P<title_id>\d+)/reviews',
     ReviewViewSet, basename='reviews')
@@ -20,5 +17,7 @@ v1_router.register(
 
 
 urlpatterns = [
+    path('v1/auth/signup/', SignUpView.as_view()),
+    path('v1/auth/token/', TokenObtainAccessView.as_view()),
     path('v1/', include(v1_router.urls)),
 ]

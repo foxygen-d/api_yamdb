@@ -21,6 +21,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'users.apps.UsersConfig',
+    'auth_yamdb.apps.AuthConfig',
     'reviews.apps.ReviewsConfig',
     'api.apps.ApiConfig',
 ]
@@ -66,7 +68,7 @@ DATABASES = {
     }
 }
 
-AUTH_USER_MODEL = "reviews.User"
+AUTH_USER_MODEL = "users.User"
 
 # Password validation
 
@@ -107,7 +109,7 @@ STATICFILES_DIRS = (os.path.join(BASE_DIR, 'static/'),)
 
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticatedOrReadOnly',
+        'rest_framework.permissions.AllowAny',
     ],
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
@@ -115,10 +117,17 @@ REST_FRAMEWORK = {
 }
 
 SIMPLE_JWT = {
-    'USER_ID_FIELD': 'id',
+    'USER_ID_FIELD': 'username',
     'ACCESS_TOKEN_LIFETIME': timedelta(days=1),
     'AUTH_HEADER_TYPES': ('Bearer', 'JWT'),
+    'AUTH_TOKEN_CLASSES': (
+        'rest_framework_simplejwt.tokens.SlidingToken',
+    ),
 }
 
-EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
-EMAIL_FILE_PATH = os.path.join(BASE_DIR, 'sent_emails')
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.yandex.com'
+EMAIL_PORT = 465
+EMAIL_HOST_USER = 'DjangoClient'
+EMAIL_HOST_PASSWORD = 'dldaimvcininobxh'
+EMAIL_USE_SSL = True

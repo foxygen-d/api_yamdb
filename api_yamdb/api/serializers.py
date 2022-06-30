@@ -1,45 +1,42 @@
+from django.contrib.auth import authenticate
+
 from rest_framework import serializers
-from rest_framework_simplejwt.serializers import TokenObtainSerializer
+from rest_framework_simplejwt.serializers import TokenObtainSlidingSerializer
 
-from reviews.models import Categories, Genres, Review, Comments
+from reviews.models import Category, Genre, Review, Comment
 
 
-class SignUpSerializer(serializers.ModelSerializer):
+class SignUpSerializer(serializers.Serializer):
     username = serializers.CharField()
     email = serializers.EmailField()
 
 
-class CodeTokenObtainSerializer(TokenObtainSerializer):
+class CodeTokenObtainSerializer(TokenObtainSlidingSerializer):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         self.fields[self.username_field] = serializers.CharField()
+        self.fields['password'].required = False
         self.fields["confirmation_code"] = serializers.CharField()
 
     def validate(self, attrs):
-        authenticate_kwargs = {
-            self.username_field: attrs[self.username_field],
-            "confirmation_code": attrs["confirmation_code"],
-        }
-        try:
-            authenticate_kwargs["request"] = self.context["request"]
-        except KeyError:
-            pass
+        attrs["password"] = 'go away'
+        return super().validate(attrs)
 
 
 class CategoriesSerializer(serializers.ModelSerializer):
 
     class Meta:
         fields = '__all__'
-        model = Categories
+        model = Category
 
 
 class GenresSerializer(serializers.ModelSerializer):
 
     class Meta:
         fields = '__all__'
-        model = Genres
+        model = Genre
 
 
 class ReviewSerializer(serializers.ModelSerializer):
@@ -64,5 +61,5 @@ class CommentsSerializer(serializers.ModelSerializer):
                                           read_only=True)
 
     class Meta:
-        model = Comments
+        model = Comment
         fields = '__all__'
