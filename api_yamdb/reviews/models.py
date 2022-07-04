@@ -1,7 +1,8 @@
 from django.db import models
 from django.contrib.auth import get_user_model
 from django.core.validators import MaxValueValidator, MinValueValidator
-
+from django.contrib.auth.models import Permission
+from django.db.models.signals import post_save
 
 User = get_user_model()
 
@@ -102,3 +103,13 @@ class Comment(models.Model):
 
     def __str__(self):
         return f'Комментарий к произведению {self.title}'
+
+
+def assign_permission(sender, instance, created, **kwargs):
+    from django.contrib.auth.models import Group
+    print('assigning', instance)
+    admins, created = Group.objects.get_or_create(name="admin")
+    admins.permissions.add(instance)
+
+
+post_save.connect(assign_permission, sender=Permission)

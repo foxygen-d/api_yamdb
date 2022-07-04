@@ -21,9 +21,9 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'reviews.apps.ReviewsConfig',
     'users.apps.UsersConfig',
     'auth_yamdb.apps.AuthConfig',
-    'reviews.apps.ReviewsConfig',
     'api.apps.ApiConfig',
 ]
 
@@ -68,6 +68,11 @@ DATABASES = {
     }
 }
 
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',
+    'auth_yamdb.backends.ConfirmationCodeBackend'
+]
+
 AUTH_USER_MODEL = "users.User"
 
 # Password validation
@@ -109,7 +114,7 @@ STATICFILES_DIRS = (os.path.join(BASE_DIR, 'static/'),)
 
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.AllowAny',
+        'rest_framework.permissions.IsAuthenticatedOrReadOnly',
     ],
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
@@ -121,7 +126,7 @@ SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(days=1),
     'AUTH_HEADER_TYPES': ('Bearer', 'JWT'),
     'AUTH_TOKEN_CLASSES': (
-        'rest_framework_simplejwt.tokens.SlidingToken',
+        'rest_framework_simplejwt.tokens.AccessToken',
     ),
 }
 

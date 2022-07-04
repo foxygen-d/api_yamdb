@@ -1,28 +1,56 @@
-from django.contrib.auth import authenticate
+from http import HTTPStatus
 
+from django.contrib.auth import authenticate, get_user_model
+from django.http import Http404, HttpResponse, HttpResponseNotFound
 from rest_framework import serializers
-from rest_framework_simplejwt.serializers import TokenObtainSlidingSerializer
+from rest_framework_simplejwt.tokens import AccessToken
 
 from reviews.models import Category, Genre, Review, Comment
 
 
-class SignUpSerializer(serializers.Serializer):
+User = get_user_model()
+
+
+class SignUpSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = User
+        fields = ['username', 'email']
+
+
+class CodeTokenObtainSerializer(serializers.Serializer):
     username = serializers.CharField()
-    email = serializers.EmailField()
-
-
-class CodeTokenObtainSerializer(TokenObtainSlidingSerializer):
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        self.fields[self.username_field] = serializers.CharField()
-        self.fields['password'].required = False
-        self.fields["confirmation_code"] = serializers.CharField()
+    confirmation_code = serializers.CharField()
 
     def validate(self, attrs):
-        attrs["password"] = 'go away'
-        return super().validate(attrs)
+        try:
+            user = authenticate(**attrs)
+        except User.DoesNotExist:
+            raise Http404
+        else:
+            return {
+                'token': str(AccessToken.for_user(user))
+            }
+
+
+class UserProfileSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = User
+        fields = (
+            'username', 'email', 'first_name',
+            'last_name', 'bio', 'role')
+        read_only_fields = ['role']
+        extra_kwargs = {'email': {'required': True}}
+
+
+class UserAdminSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = User
+        fields = (
+            'username', 'email', 'first_name',
+            'last_name', 'bio', 'role')
 
 
 class CategoriesSerializer(serializers.ModelSerializer):

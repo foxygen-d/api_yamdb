@@ -3,7 +3,11 @@ from django.contrib.auth.models import Group, AbstractUser
 
 
 class User(AbstractUser):
-
+    email = models.EmailField(
+        'Email',
+        null=False,
+        blank=False,
+    )
     role = models.ForeignKey(
         Group,
         null=False,
@@ -23,3 +27,8 @@ class User(AbstractUser):
         null=True,
         blank=True
     )
+
+    def __init__(self, *args, **kwargs) -> None:
+        if 'role' in kwargs and isinstance(kwargs['role'], str):
+            kwargs['role_id'] = kwargs.pop('role')
+        super().__init__(*args, **kwargs)

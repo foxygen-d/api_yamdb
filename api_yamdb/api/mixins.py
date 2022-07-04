@@ -9,3 +9,11 @@ class CreateRetrieveDestroyViewSet(
     viewsets.GenericViewSet
 ):
     pass
+
+
+class RetrieveUpdateViewset(
+    mixins.RetrieveModelMixin,
+    mixins.UpdateModelMixin,
+    viewsets.GenericViewSet
+):
+    pass
