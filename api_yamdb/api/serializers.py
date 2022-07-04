@@ -17,6 +17,13 @@ class SignUpSerializer(serializers.ModelSerializer):
         model = User
         fields = ['username', 'email']
 
+    def validate_username(self, value):
+        if value == 'me':
+            raise serializers.ValidationError(
+                "Forbidden username, go away.", code=HTTPStatus.BAD_REQUEST
+            )
+        return value
+
 
 class CodeTokenObtainSerializer(serializers.Serializer):
     username = serializers.CharField()
@@ -42,6 +49,12 @@ class UserProfileSerializer(serializers.ModelSerializer):
             'last_name', 'bio', 'role')
         read_only_fields = ['role']
         extra_kwargs = {'email': {'required': True}}
+
+        def to_representation(self, instance):
+            """Represent role as its name string."""
+            representation = super().to_representation(instance)
+            representation['role'] = representation['role'].__name__
+            return representation
 
 
 class UserAdminSerializer(serializers.ModelSerializer):

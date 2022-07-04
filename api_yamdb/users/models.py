@@ -7,8 +7,20 @@ class User(AbstractUser):
         'Email',
         null=False,
         blank=False,
+        unique=True,
     )
-    role = models.ForeignKey(
+    role = models.CharField(
+        max_length=10,
+        null=False,
+        blank=False,
+        choices=[
+            ('user', 'User'),
+            ('moderator', 'Moderator'),
+            ('admin', 'Admin'),
+        ],
+        default='user'
+    )
+    _role = models.ForeignKey(
         Group,
         null=False,
         blank=False,
@@ -28,7 +40,11 @@ class User(AbstractUser):
         blank=True
     )
 
+    class Meta:
+        ordering = ['username']
+
     def __init__(self, *args, **kwargs) -> None:
         if 'role' in kwargs and isinstance(kwargs['role'], str):
-            kwargs['role_id'] = kwargs.pop('role')
+            kwargs['_role_id'] = kwargs.pop('role')
+            kwargs['role'] = kwargs['_role_id']
         super().__init__(*args, **kwargs)

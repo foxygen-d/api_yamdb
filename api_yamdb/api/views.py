@@ -5,7 +5,8 @@ from rest_framework import viewsets, filters, permissions
 from rest_framework.views import APIView
 from rest_framework.generics import RetrieveUpdateAPIView
 from rest_framework.response import Response
-from rest_framework.pagination import LimitOffsetPagination
+from rest_framework.pagination import (
+    LimitOffsetPagination, PageNumberPagination)
 from rest_framework_simplejwt.views import TokenViewBase
 
 from reviews.models import User, Review, Comment, Title, Category, Genre
@@ -15,7 +16,7 @@ from .serializers import (
     CodeTokenObtainSerializer, SignUpSerializer,
     UserAdminSerializer, UserProfileSerializer)
 from .mixins import CreateRetrieveDestroyViewSet, RetrieveUpdateViewset
-from .permissions import IsSuperuser, RolePermissions
+from .permissions import IsSuperuser, ProfileOwner, RolePermissions
 from auth_yamdb.models import ConfirmationCode
 from auth_yamdb.utils import bland_code_hasher, salty_code_hasher
 
@@ -52,7 +53,7 @@ class TokenObtainAccessView(TokenViewBase):
 class ProfileUpdateView(RetrieveUpdateAPIView):
     queryset = User.objects.all()
     serializer_class = UserProfileSerializer
-    permission_classes = [permissions.DjangoModelPermissions]
+    permission_classes = [ProfileOwner | RolePermissions]
 
     def get_object(self):
         return self.request.user
@@ -62,6 +63,7 @@ class UsersViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserAdminSerializer
     permission_classes = [RolePermissions]
+    pagination_class = PageNumberPagination
     filter_backends = [filters.SearchFilter]
     search_fields = ['username']
     lookup_field = 'username'
@@ -96,7 +98,8 @@ class ReviewViewSet(viewsets.ModelViewSet):
 class CommentsViewSet(viewsets.ModelViewSet):
     """Представление для комментариев."""
     serializer_class = CommentsSerializer
-    permission_classes = [permissions.DjangoModelPermissionsOrAnonReadOnly]
+    permission_classes = [
+        RolePermissions | permissions.IsAuthenticatedOrReadOnly]
     pagination_class = LimitOffsetPagination
 
     def get_queryset(self):

@@ -1,20 +1,17 @@
 from rest_framework import permissions
 
 
-class IsAdminOrReadOnly(permissions.BasePermission):
-
-    def has_object_permission(self, request, view, obj):
-        return(
-            request.method in permissions.SAFE_METHODS
-            or request.user.is_staff
-        )
-
-
 class IsAuthorOrReadOnly(permissions.BasePermission):
 
     def has_object_permission(self, request, view, obj):
         return (request.method in permissions.SAFE_METHODS
                 or request.user.id == obj.author.id)
+
+
+class ProfileOwner(permissions.IsAuthenticated):
+
+    def has_object_permission(self, request, view, obj):
+        return request.user == obj
 
 
 class IsSuperuser(permissions.IsAuthenticated):
@@ -43,10 +40,6 @@ class RolePermissions(permissions.DjangoModelPermissions):
 
         queryset = self._queryset(view)
         perms = self.get_required_permissions(request.method, queryset.model)
-        role_perms = request.user.role.permissions
-        print(request.user)
-        print(request.user.role)
-        print(role_perms)
-        print(perms)
+        role_perms = request.user._role.permissions
         return request.user.is_superuser or all([
             role_perms.filter(codename=perm).exists() for perm in perms])

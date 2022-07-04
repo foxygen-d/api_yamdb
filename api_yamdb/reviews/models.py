@@ -105,11 +105,11 @@ class Comment(models.Model):
         return f'Комментарий к произведению {self.title}'
 
 
-def assign_permission(sender, instance, created, **kwargs):
-    from django.contrib.auth.models import Group
-    print('assigning', instance)
-    admins, created = Group.objects.get_or_create(name="admin")
-    admins.permissions.add(instance)
-
-
-post_save.connect(assign_permission, sender=Permission)
+# def assign_permission(sender, instance, created, **kwargs):
+#     from django.contrib.auth.models import Group
+#     print('assigning', instance)
+#     admins, created = Group.objects.get_or_create(name="admin")
+#     admins.permissions.add(instance)
+# 
+# 
+# post_save.connect(assign_permission, sender=Permission)

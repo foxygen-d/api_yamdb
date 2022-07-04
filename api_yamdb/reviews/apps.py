@@ -1,5 +1,5 @@
-from django.apps import apps, AppConfig
-from django.db.models.signals import post_migrate, post_save
+from django.apps import AppConfig
+from django.db.models.signals import post_migrate
 from django.contrib.auth import get_user_model
 
 from reviews.utils import set_by_id, get_csv_data
@@ -13,7 +13,7 @@ class ReviewsConfig(AppConfig):
         """Code to run after migration is completed."""
         verbosity = kwargs['verbosity']
         self.setup_permissions(verbosity=verbosity)
-        self.prepopulate_database(verbosity=verbosity)
+        # self.prepopulate_database(verbosity=verbosity)
 
     def setup_permissions(self, **kwargs) -> None:
         """Get and set permissions for the groups that should have them."""
@@ -30,6 +30,7 @@ class ReviewsConfig(AppConfig):
         comment_permissions = Permission.objects.filter(
             content_type=ContentType.objects.get_for_model(Comment))
         # create new groups if DoesNotExist and assign respective permissions
+        Group.objects.get_or_create(name='user')
         moderators, created = Group.objects.get_or_create(name="moderator")
         if verbosity >= 2:
             print('Setting up moderator permissions.')
@@ -51,8 +52,8 @@ class ReviewsConfig(AppConfig):
             print('Setting up administrator permissions.')
         admins.permissions.set(Permission.objects.all())
 
-        print(f'Mods: {moderators.permissions.all()}')
-        print(f'Admins: {admins.permissions.all()}')
+        # print(f'Mods: {moderators.permissions.all()}')
+        # print(f'Admins: {admins.permissions.all()}')
 
     def prepopulate_database(self, verbosity) -> None:
         """Fill database with data from included csv files."""
@@ -73,7 +74,6 @@ class ReviewsConfig(AppConfig):
 
         user_data = get_csv_data(source='users')
         for payload in user_data:
-            set_by_id(payload, 'role')
             User.objects.get_or_create(**payload)
 
         for model in (Genre, Category):
