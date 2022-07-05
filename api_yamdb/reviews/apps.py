@@ -13,6 +13,8 @@ class ReviewsConfig(AppConfig):
         """Code to run after migration is completed."""
         verbosity = kwargs['verbosity']
         self.setup_permissions(verbosity=verbosity)
+        # uncomment to get test objects
+        # comment out again before you run pytest
         # self.prepopulate_database(verbosity=verbosity)
 
     def setup_permissions(self, **kwargs) -> None:
@@ -51,9 +53,6 @@ class ReviewsConfig(AppConfig):
         if verbosity >= 2:
             print('Setting up administrator permissions.')
         admins.permissions.set(Permission.objects.all())
-
-        # print(f'Mods: {moderators.permissions.all()}')
-        # print(f'Admins: {admins.permissions.all()}')
 
     def prepopulate_database(self, verbosity) -> None:
         """Fill database with data from included csv files."""

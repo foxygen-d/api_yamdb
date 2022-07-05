@@ -15,8 +15,10 @@ from .serializers import (
     CategoriesSerializer, GenresSerializer,
     CodeTokenObtainSerializer, SignUpSerializer,
     UserAdminSerializer, UserProfileSerializer)
-from .mixins import CreateRetrieveDestroyViewSet, RetrieveUpdateViewset
-from .permissions import IsSuperuser, ProfileOwner, RolePermissions
+from .mixins import CreateRetrieveDestroyViewSet
+from .permissions import (
+    IsAuthorOrReadOnly,
+    ProfileOwner, RolePermissions)
 from auth_yamdb.models import ConfirmationCode
 from auth_yamdb.utils import bland_code_hasher, salty_code_hasher
 
@@ -82,7 +84,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
     """Представление для отзывов."""
     serializer_class = ReviewSerializer
     permission_classes = [
-        RolePermissions | permissions.IsAuthenticatedOrReadOnly]
+        RolePermissions | IsAuthorOrReadOnly]
     pagination_class = LimitOffsetPagination
 
     def get_queryset(self):
@@ -99,7 +101,7 @@ class CommentsViewSet(viewsets.ModelViewSet):
     """Представление для комментариев."""
     serializer_class = CommentsSerializer
     permission_classes = [
-        RolePermissions | permissions.IsAuthenticatedOrReadOnly]
+        RolePermissions | IsAuthorOrReadOnly]
     pagination_class = LimitOffsetPagination
 
     def get_queryset(self):

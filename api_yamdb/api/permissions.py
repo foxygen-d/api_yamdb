@@ -1,6 +1,12 @@
 from rest_framework import permissions
 
 
+class IsSuperuser(permissions.BasePermission):
+
+    def has_permission(self, request):
+        return request.user.is_superuser
+
+
 class IsAuthorOrReadOnly(permissions.BasePermission):
 
     def has_object_permission(self, request, view, obj):
@@ -14,17 +20,12 @@ class ProfileOwner(permissions.IsAuthenticated):
         return request.user == obj
 
 
-class IsSuperuser(permissions.IsAuthenticated):
-
-    def has_permission(self, request):
-        return request.user.is_superuser
-
-
 class RolePermissions(permissions.DjangoModelPermissions):
 
     perms_map = {
         'GET': ['view_%(model_name)s'],
         'POST': ['add_%(model_name)s'],
+        'PUT': ['change_%(model_name)s'],
         'PATCH': ['change_%(model_name)s'],
         'DELETE': ['delete_%(model_name)s'],
     }

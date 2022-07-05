@@ -11,20 +11,14 @@ class UsersConfig(AppConfig):
         verbosity = kwargs['verbosity']
         self.setup_permissions(verbosity=verbosity)
 
-    def setup_permissions(self, **kwargs) -> None:
+    def setup_permissions(self, verbosity) -> None:
         """Get and set permissions for the groups that should have them."""
         from django.contrib.auth.models import Group, Permission
-
-        verbosity = kwargs['verbosity']
-        if verbosity >= 1:
-            print("Setting up permissions for all user roles.")
 
         admins, created = Group.objects.get_or_create(name="admin")
         if verbosity >= 2:
             print('Setting up administrator permissions.')
         admins.permissions.set(Permission.objects.all())
-
-        #print(f'Admins: {admins.permissions.all()}')
 
     def ready(self) -> None:
         post_migrate.connect(self.post_migration, sender=self)

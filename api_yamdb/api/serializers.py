@@ -1,7 +1,7 @@
 from http import HTTPStatus
 
 from django.contrib.auth import authenticate, get_user_model
-from django.http import Http404, HttpResponse, HttpResponseNotFound
+from django.http import Http404
 from rest_framework import serializers
 from rest_framework_simplejwt.tokens import AccessToken
 
@@ -34,6 +34,8 @@ class CodeTokenObtainSerializer(serializers.Serializer):
             user = authenticate(**attrs)
         except User.DoesNotExist:
             raise Http404
+        except AttributeError:
+            raise serializers.ValidationError(code=HTTPStatus.BAD_REQUEST)
         else:
             return {
                 'token': str(AccessToken.for_user(user))
@@ -48,13 +50,13 @@ class UserProfileSerializer(serializers.ModelSerializer):
             'username', 'email', 'first_name',
             'last_name', 'bio', 'role')
         read_only_fields = ['role']
-        extra_kwargs = {'email': {'required': True}}
+        # extra_kwargs = {'email': {'required': True}}
 
-        def to_representation(self, instance):
-            """Represent role as its name string."""
-            representation = super().to_representation(instance)
-            representation['role'] = representation['role'].__name__
-            return representation
+        # def to_representation(self, instance):
+        #     """Represent role as its name string."""
+        #     representation = super().to_representation(instance)
+        #     representation['role'] = representation['role'].__name__
+        #     return representation
 
 
 class UserAdminSerializer(serializers.ModelSerializer):

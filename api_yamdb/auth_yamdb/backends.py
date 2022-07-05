@@ -8,6 +8,8 @@ class ConfirmationCodeBackend(ModelBackend):
     def authenticate(self, request, username=None, confirmation_code=None):
         User = get_user_model()
         user = User.objects.get(username=username)
+        if not user:
+            raise User.DoesNotExist
         if not user.code.value == salty_code_hasher(confirmation_code):
-            raise Exception('Authentication failure')
+            raise AttributeError
         return user
