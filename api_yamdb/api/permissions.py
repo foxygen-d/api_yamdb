@@ -44,3 +44,10 @@ class RolePermissions(permissions.DjangoModelPermissions):
         role_perms = request.user._role.permissions
         return request.user.is_superuser or all([
             role_perms.filter(codename=perm).exists() for perm in perms])
+
+
+class RolePermissionsOrReadOnly(RolePermissions):
+
+    def has_permission(self, request, view):
+        return (super().has_permission(request, view)
+                or request.method in permissions.SAFE_METHODS) 

@@ -23,7 +23,7 @@ class Title(models.Model):
     )
 
 
-class Category(models.Model):
+class Genre(models.Model):
     name = models.CharField(max_length=256)
     slug = models.SlugField(unique=True)
 
@@ -31,7 +31,15 @@ class Category(models.Model):
         return self.name
 
 
-class Genre(models.Model):
+class GenreTitle(models.Model):
+    title = models.ForeignKey(Title, on_delete=models.SET_NULL, null=True)
+    genre = models.ForeignKey(Genre, on_delete=models.SET_NULL, null=True)
+
+    def __str__(self):
+        return f'{self.title} {self.genere}'
+
+
+class Category(models.Model):
     name = models.CharField(max_length=256)
     slug = models.SlugField(unique=True)
 

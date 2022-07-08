@@ -13,8 +13,8 @@ class ReviewsConfig(AppConfig):
         """Code to run after migration is completed."""
         verbosity = kwargs['verbosity']
         self.setup_permissions(verbosity=verbosity)
-        # uncomment to get test objects
-        # comment out again before you run pytest
+        # uncomment & migrate to get test objects
+        # comment out again before you run pytest lest it screws up your tests
         # self.prepopulate_database(verbosity=verbosity)
 
     def setup_permissions(self, **kwargs) -> None:

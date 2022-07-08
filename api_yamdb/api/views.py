@@ -8,17 +8,19 @@ from rest_framework.response import Response
 from rest_framework.pagination import (
     LimitOffsetPagination, PageNumberPagination)
 from rest_framework_simplejwt.views import TokenViewBase
+from django_filters.rest_framework import DjangoFilterBackend
 
 from reviews.models import User, Review, Comment, Title, Category, Genre
 from .serializers import (
     ReviewSerializer, CommentsSerializer,
-    CategoriesSerializer, GenresSerializer,
-    CodeTokenObtainSerializer, SignUpSerializer,
+    CategorySerializer, GenreSerializer,
+    CodeTokenObtainSerializer, SignUpSerializer, TitleSerializer,
     UserAdminSerializer, UserProfileSerializer)
 from .mixins import CreateRetrieveDestroyViewSet
 from .permissions import (
     IsAuthorOrReadOnly,
-    ProfileOwner, RolePermissions)
+    ProfileOwner, RolePermissions,
+    RolePermissionsOrReadOnly)
 from auth_yamdb.models import ConfirmationCode
 from auth_yamdb.utils import bland_code_hasher, salty_code_hasher
 
@@ -66,18 +68,45 @@ class UsersViewSet(viewsets.ModelViewSet):
     serializer_class = UserAdminSerializer
     permission_classes = [RolePermissions]
     pagination_class = PageNumberPagination
-    filter_backends = [filters.SearchFilter]
+    filter_backends = [filters.SearchFilter, DjangoFilterBackend]
     search_fields = ['username']
     lookup_field = 'username'
 
 
+class GenresViewSet(CreateRetrieveDestroyViewSet):
+    queryset = Genre.objects.all()
+    serializer_class = GenreSerializer
+    pagination_class = LimitOffsetPagination
+    filter_backends = [filters.SearchFilter]
+    permission_classes = [RolePermissionsOrReadOnly]
+    search_fields = ['name']
+    lookup_field = "slug"
+
+
 class CategoriesViewSet(CreateRetrieveDestroyViewSet):
     queryset = Category.objects.all()
-    serializer_class = CategoriesSerializer
+    serializer_class = CategorySerializer
     pagination_class = LimitOffsetPagination
-    filter_backends = (filters.SearchFilter,)
-    permission_classes = [RolePermissions]
-    search_fields = ('name',)
+    filter_backends = [filters.SearchFilter]
+    permission_classes = [RolePermissionsOrReadOnly]
+    search_fields = ['name']
+    lookup_field = "slug"
+
+
+class TitlesViewSet(viewsets.ModelViewSet):
+    queryset = Title.objects.all()
+    serializer_class = TitleSerializer
+    pagination_class = LimitOffsetPagination
+    permission_classes = [RolePermissionsOrReadOnly]
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['genre', 'name', 'year']
+
+    def get_queryset(self):
+        queryset = Title.objects.all()
+        category = self.request.query_params.get('category')
+        if category is not None:
+            queryset = queryset.filter(category__slug__contains=category)
+        return queryset
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
@@ -89,7 +118,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         title = get_object_or_404(Title, id=self.kwargs.get('title_id'))
-        new_queryset = title.comments.all()
+        new_queryset = title.reviews.all()
         return new_queryset
 
     def perform_create(self, serializer):

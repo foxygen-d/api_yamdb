@@ -2,10 +2,11 @@ from http import HTTPStatus
 
 from django.contrib.auth import authenticate, get_user_model
 from django.http import Http404
+from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 from rest_framework_simplejwt.tokens import AccessToken
 
-from reviews.models import Category, Genre, Review, Comment
+from reviews.models import Category, Genre, GenreTitle, Review, Comment, Title
 
 
 User = get_user_model()
@@ -50,13 +51,6 @@ class UserProfileSerializer(serializers.ModelSerializer):
             'username', 'email', 'first_name',
             'last_name', 'bio', 'role')
         read_only_fields = ['role']
-        # extra_kwargs = {'email': {'required': True}}
-
-        # def to_representation(self, instance):
-        #     """Represent role as its name string."""
-        #     representation = super().to_representation(instance)
-        #     representation['role'] = representation['role'].__name__
-        #     return representation
 
 
 class UserAdminSerializer(serializers.ModelSerializer):
@@ -68,18 +62,43 @@ class UserAdminSerializer(serializers.ModelSerializer):
             'last_name', 'bio', 'role')
 
 
-class CategoriesSerializer(serializers.ModelSerializer):
+class CategorySerializer(serializers.ModelSerializer):
 
     class Meta:
-        fields = '__all__'
+        exclude = ['id']
+        # fields = '__all__'
         model = Category
 
 
-class GenresSerializer(serializers.ModelSerializer):
+class GenreSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        exclude = ['id']
+        # fields = '__all__'
+        model = Genre
+
+
+class TitleSerializer(serializers.ModelSerializer):
+    category = CategorySerializer()
+    genre = GenreSerializer()
 
     class Meta:
         fields = '__all__'
-        model = Genre
+        model = Title
+
+    def create(self, validated_data):
+        category_slug = validated_data.pop('category')
+        category = get_object_or_404(Category, slug=category_slug)
+        if 'genre' not in self.initial_data:
+            title = Title.objects.create(**validated_data, category=category)
+            return title
+        genres_slugs = validated_data.pop('genre')
+        title = Title.objects.create(**validated_data, category=category)
+        for genre_slug in genres_slugs:
+            current_genre_slug = genre_slug['slug']
+            current_genre = get_object_or_404(Genre, slug=current_genre_slug)
+            GenreTitle.objects.create(genre=current_genre, title=title)
+        return title
 
 
 class ReviewSerializer(serializers.ModelSerializer):
@@ -90,6 +109,7 @@ class ReviewSerializer(serializers.ModelSerializer):
     class Meta:
         model = Review
         fields = '__all__'
+        read_only_fields = ['title']
 
     def validate_score(self, value):
         if 10 < value < 1:
