@@ -2,13 +2,12 @@ from http import HTTPStatus
 
 from django.contrib.auth import authenticate, get_user_model
 from django.http import Http404
-from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from django.db.models import Avg
 from rest_framework import serializers
 from rest_framework_simplejwt.tokens import AccessToken
 
-from reviews.models import Category, Genre, GenreTitle, Review, Comment, Title
+from reviews.models import Category, Genre, Review, Comment, Title
 
 
 User = get_user_model()

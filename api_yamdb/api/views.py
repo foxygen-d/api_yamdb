@@ -10,13 +10,13 @@ from rest_framework.pagination import (
 from rest_framework_simplejwt.views import TokenViewBase
 from django_filters.rest_framework import DjangoFilterBackend
 
-from reviews.models import User, Review, Comment, Title, Category, Genre
+from reviews.models import User, Review, Title, Category, Genre
 from .filters import TitleFilter
 from .serializers import (
     ReviewSerializer, CommentsSerializer,
     CategorySerializer, GenreSerializer,
-    CodeTokenObtainSerializer, SignUpSerializer, TitleReadonlySerializer, TitleSerializer,
-    UserAdminSerializer, UserProfileSerializer)
+    CodeTokenObtainSerializer, SignUpSerializer, TitleReadonlySerializer,
+    TitleSerializer, UserAdminSerializer, UserProfileSerializer)
 from .mixins import CreateRetrieveDestroyViewSet
 from .permissions import (
     IsAuthorOrReadOnly,
@@ -92,22 +92,6 @@ class CategoriesViewSet(CreateRetrieveDestroyViewSet):
     permission_classes = [RolePermissionsOrReadOnly]
     search_fields = ['name']
     lookup_field = "slug"
-
-
-# class TitlesViewSet(viewsets.ModelViewSet):
-#     queryset = Title.objects.all()
-#     serializer_class = TitleSerializer
-#     pagination_class = LimitOffsetPagination
-#     permission_classes = [RolePermissionsOrReadOnly]
-#     filter_backends = [DjangoFilterBackend]
-#     filterset_fields = ['genre', 'name', 'year']
-# 
-#     def get_queryset(self):
-#         queryset = Title.objects.all()
-#         category = self.request.query_params.get('category')
-#         if category is not None:
-#             queryset = queryset.filter(category__slug__contains=category)
-#         return queryset
 
 
 class TitlesViewSet(viewsets.ModelViewSet):

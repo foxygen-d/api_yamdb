@@ -50,4 +50,4 @@ class RolePermissionsOrReadOnly(RolePermissions):
 
     def has_permission(self, request, view):
         return (super().has_permission(request, view)
-                or request.method in permissions.SAFE_METHODS) 
+                or request.method in permissions.SAFE_METHODS)
