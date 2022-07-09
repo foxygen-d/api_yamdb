@@ -1,7 +1,7 @@
 from django.shortcuts import get_object_or_404
 from django.contrib.auth import get_user_model
 from django.core.mail import send_mail
-from rest_framework import viewsets, filters, permissions
+from rest_framework import viewsets, filters, status, permissions
 from rest_framework.views import APIView
 from rest_framework.generics import RetrieveUpdateAPIView
 from rest_framework.response import Response
@@ -11,10 +11,11 @@ from rest_framework_simplejwt.views import TokenViewBase
 from django_filters.rest_framework import DjangoFilterBackend
 
 from reviews.models import User, Review, Comment, Title, Category, Genre
+from .filters import TitleFilter
 from .serializers import (
     ReviewSerializer, CommentsSerializer,
     CategorySerializer, GenreSerializer,
-    CodeTokenObtainSerializer, SignUpSerializer, TitleSerializer,
+    CodeTokenObtainSerializer, SignUpSerializer, TitleReadonlySerializer, TitleSerializer,
     UserAdminSerializer, UserProfileSerializer)
 from .mixins import CreateRetrieveDestroyViewSet
 from .permissions import (
@@ -93,20 +94,46 @@ class CategoriesViewSet(CreateRetrieveDestroyViewSet):
     lookup_field = "slug"
 
 
+# class TitlesViewSet(viewsets.ModelViewSet):
+#     queryset = Title.objects.all()
+#     serializer_class = TitleSerializer
+#     pagination_class = LimitOffsetPagination
+#     permission_classes = [RolePermissionsOrReadOnly]
+#     filter_backends = [DjangoFilterBackend]
+#     filterset_fields = ['genre', 'name', 'year']
+# 
+#     def get_queryset(self):
+#         queryset = Title.objects.all()
+#         category = self.request.query_params.get('category')
+#         if category is not None:
+#             queryset = queryset.filter(category__slug__contains=category)
+#         return queryset
+
+
 class TitlesViewSet(viewsets.ModelViewSet):
     queryset = Title.objects.all()
     serializer_class = TitleSerializer
-    pagination_class = LimitOffsetPagination
     permission_classes = [RolePermissionsOrReadOnly]
+    pagination_class = LimitOffsetPagination
     filter_backends = [DjangoFilterBackend]
-    filterset_fields = ['genre', 'name', 'year']
+    filterset_class = TitleFilter
 
-    def get_queryset(self):
-        queryset = Title.objects.all()
-        category = self.request.query_params.get('category')
-        if category is not None:
-            queryset = queryset.filter(category__slug__contains=category)
-        return queryset
+    def get_serializer_class(self):
+        if self.action in ('retrieve', 'list'):
+            return TitleReadonlySerializer
+        return TitleSerializer
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        title_id = serializer.data['id']
+        return Response(
+            TitleReadonlySerializer(Title.objects.get(pk=title_id)).data,
+            status=status.HTTP_201_CREATED,
+            headers=headers
+        )
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
@@ -118,8 +145,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         title = get_object_or_404(Title, id=self.kwargs.get('title_id'))
-        new_queryset = title.reviews.all()
-        return new_queryset
+        return title.reviews.all()
 
     def perform_create(self, serializer):
         title = get_object_or_404(Title, id=self.kwargs.get('title_id'))
@@ -134,9 +160,8 @@ class CommentsViewSet(viewsets.ModelViewSet):
     pagination_class = LimitOffsetPagination
 
     def get_queryset(self):
-        title = get_object_or_404(Title, id=self.kwargs.get('title_id'))
-        new_queryset = title.comments.all()
-        return new_queryset
+        review = get_object_or_404(Review, id=self.kwargs.get('review_id'))
+        return review.comments.all()
 
     def perform_create(self, serializer):
         title = get_object_or_404(Title, id=self.kwargs.get('title_id'))

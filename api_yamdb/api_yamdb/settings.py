@@ -99,12 +99,16 @@ AUTH_PASSWORD_VALIDATORS = [
 
 # Internationalization
 
+LOCALE_PATHS = (
+    os.path.join(BASE_DIR, 'locale'),
+)
+
 LANGUAGES = [
     ('en', _('English')),
     ('ru', _('Russian'))
 ]
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'ru'
 
 TIME_ZONE = 'UTC'
 

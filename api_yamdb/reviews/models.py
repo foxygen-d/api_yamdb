@@ -15,11 +15,9 @@ class Title(models.Model):
         blank=True,
         null=True
     )
-    genre = models.ForeignKey(
+    genre = models.ManyToManyField(
         'Genre',
-        on_delete=models.SET_NULL,
-        blank=True,
-        null=True
+        through='GenreTitle'
     )
 
 
@@ -36,7 +34,7 @@ class GenreTitle(models.Model):
     genre = models.ForeignKey(Genre, on_delete=models.SET_NULL, null=True)
 
     def __str__(self):
-        return f'{self.title} {self.genere}'
+        return f'{self.title} {self.genre}'
 
 
 class Category(models.Model):
@@ -64,8 +62,10 @@ class Review(models.Model):
     text = models.TextField('Текст отзыва', help_text='Новый отзыв')
     score = models.SmallIntegerField(
         validators=[
-            MinValueValidator(1, 'Ниже 1 оценку произведению ставить нельзя!'),
-            MaxValueValidator(10, 'Выше 10 оценку произведению ставить нельзя!')
+            MinValueValidator(
+                1, 'Ниже 1 оценку произведению ставить нельзя!'),
+            MaxValueValidator(
+                10, 'Выше 10 оценку произведению ставить нельзя!')
         ],
     )
     pub_date = models.DateTimeField(

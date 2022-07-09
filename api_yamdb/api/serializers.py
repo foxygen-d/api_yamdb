@@ -3,6 +3,8 @@ from http import HTTPStatus
 from django.contrib.auth import authenticate, get_user_model
 from django.http import Http404
 from django.shortcuts import get_object_or_404
+from django.utils import timezone
+from django.db.models import Avg
 from rest_framework import serializers
 from rest_framework_simplejwt.tokens import AccessToken
 
@@ -66,39 +68,59 @@ class CategorySerializer(serializers.ModelSerializer):
 
     class Meta:
         exclude = ['id']
-        # fields = '__all__'
         model = Category
+        lookup_field = 'slug'
+        extra_kwargs = {
+            'url': {'lookup_field': 'slug'}
+        }
 
 
 class GenreSerializer(serializers.ModelSerializer):
 
     class Meta:
         exclude = ['id']
-        # fields = '__all__'
         model = Genre
+        lookup_field = 'slug'
+        extra_kwargs = {
+            'url': {'lookup_field': 'slug'}
+        }
 
 
 class TitleSerializer(serializers.ModelSerializer):
-    category = CategorySerializer()
-    genre = GenreSerializer()
+    category = serializers.SlugRelatedField(
+        slug_field='slug', queryset=Category.objects.all(), allow_null=False
+    )
+    genre = serializers.SlugRelatedField(
+        many=True, slug_field='slug', queryset=Genre.objects.all()
+    )
 
     class Meta:
         fields = '__all__'
         model = Title
 
-    def create(self, validated_data):
-        category_slug = validated_data.pop('category')
-        category = get_object_or_404(Category, slug=category_slug)
-        if 'genre' not in self.initial_data:
-            title = Title.objects.create(**validated_data, category=category)
-            return title
-        genres_slugs = validated_data.pop('genre')
-        title = Title.objects.create(**validated_data, category=category)
-        for genre_slug in genres_slugs:
-            current_genre_slug = genre_slug['slug']
-            current_genre = get_object_or_404(Genre, slug=current_genre_slug)
-            GenreTitle.objects.create(genre=current_genre, title=title)
-        return title
+    def validate_year(self, value):
+        if value > timezone.now().year:
+            raise serializers.ValidationError(
+                'Нельзя указать год больше текущего'
+            )
+        return value
+
+
+class TitleReadonlySerializer(serializers.ModelSerializer):
+    category = CategorySerializer(read_only=True)
+    genre = GenreSerializer(read_only=True, many=True)
+    rating = serializers.SerializerMethodField()
+
+    class Meta:
+        fields = ('id', 'name', 'year', 'rating',
+                  'description', 'genre', 'category')
+        model = Title
+
+    def get_rating(self, obj):
+        if obj.reviews.count():
+            rating = obj.reviews.aggregate(avg_score=Avg('score'))
+            return int(rating.get('avg_score'))
+        return None
 
 
 class ReviewSerializer(serializers.ModelSerializer):
