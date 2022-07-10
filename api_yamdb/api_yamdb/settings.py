@@ -24,7 +24,8 @@ INSTALLED_APPS = [
     'users.apps.UsersConfig',
     'auth_yamdb.apps.AuthConfig',
     'api.apps.ApiConfig',
-    'rest_framework_simplejwt'
+    'rest_framework_simplejwt',
+    'rest_framework',
 ]
 
 MIDDLEWARE = [
