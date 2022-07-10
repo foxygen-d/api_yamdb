@@ -139,7 +139,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
             serializer.save(author=self.request.user, title=title)
         except IntegrityError:
             raise serializers.ValidationError(
-                detail="Nobody wants your opinions the second time",
+                detail="Nobody wants your opinion the second time",
                 code=HTTPStatus.BAD_REQUEST
             )
 
