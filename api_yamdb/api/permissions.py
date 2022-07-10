@@ -1,26 +1,10 @@
 from rest_framework import permissions
 
 
-class IsAuthorOrReadOnly(permissions.BasePermission):
-
-    def has_permission(self, request, view):
-
-        return bool(
-            request.method in permissions.SAFE_METHODS
-            or request.user
-            and request.user.is_authenticated
-        )
+class ProfileOwner(permissions.IsAuthenticated):
 
     def has_object_permission(self, request, view, obj):
-        if request.user and request.user.is_authenticated:
-            if (request.user.is_staff or request.user.role == 'admin'
-                or request.user.role == 'moderator'
-                or obj.author == request.user
-                or request.method == 'POST'
-                    and request.user.is_authenticated):
-                return True
-        elif request.method in permissions.SAFE_METHODS:
-            return True
+        return request.user == obj
 
 
 class RolePermissions(permissions.DjangoModelPermissions):
@@ -37,9 +21,7 @@ class RolePermissions(permissions.DjangoModelPermissions):
         if getattr(view, '_ignore_model_permissions', False):
             return True
 
-        if not request.user or (
-            not request.user.is_authenticated and self.authenticated_users_only
-        ):
+        if not request.user or not request.user.is_authenticated:
             return False
 
         queryset = self._queryset(view)
@@ -53,4 +35,15 @@ class RolePermissionsOrReadOnly(RolePermissions):
 
     def has_permission(self, request, view):
         return (super().has_permission(request, view)
+                or request.method in permissions.SAFE_METHODS)
+
+
+class RolePermissionsAuthorOrReadOnly(RolePermissionsOrReadOnly):
+
+    def has_object_permission(self, request, view, obj):
+        return (request.user == obj.author
+                or super().has_permission(request, view))
+
+    def has_permission(self, request, view):
+        return (request.user.is_authenticated
                 or request.method in permissions.SAFE_METHODS)

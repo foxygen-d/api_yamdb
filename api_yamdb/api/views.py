@@ -15,7 +15,7 @@ from reviews.models import Category, Genre, Review, Title, User
 
 from .filters import TitleFilter
 from .mixins import CreateRetrieveDestroyViewSet
-from .permissions import (IsAuthorOrReadOnly, RolePermissions,
+from .permissions import (RolePermissionsAuthorOrReadOnly, RolePermissions,
                           RolePermissionsOrReadOnly)
 from .serializers import (CategorySerializer, CodeTokenObtainSerializer,
                           CommentsSerializer, GenreSerializer,
@@ -120,7 +120,7 @@ class TitlesViewSet(viewsets.ModelViewSet):
 class ReviewViewSet(viewsets.ModelViewSet):
     """Представление для отзывов."""
     serializer_class = ReviewSerializer
-    permission_classes = (permissions.IsAuthenticatedOrReadOnly, IsAuthorOrReadOnly)
+    permission_classes = [RolePermissionsAuthorOrReadOnly]
     pagination_class = LimitOffsetPagination
 
     def get_queryset(self):
@@ -136,7 +136,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
 class CommentsViewSet(viewsets.ModelViewSet):
     """Представление для комментариев."""
     serializer_class = CommentsSerializer
-    permission_classes = [IsAuthorOrReadOnly]
+    permission_classes = [RolePermissionsAuthorOrReadOnly]
     pagination_class = LimitOffsetPagination
 
     def get_queryset(self):
