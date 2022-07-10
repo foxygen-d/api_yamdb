@@ -1,7 +1,9 @@
+from http import HTTPStatus
+from django.db import IntegrityError
 from django.shortcuts import get_object_or_404
 from django.contrib.auth import get_user_model
 from django.core.mail import send_mail
-from rest_framework import viewsets, filters, status, permissions
+from rest_framework import viewsets, filters, status, permissions, serializers
 from rest_framework.views import APIView
 from rest_framework.generics import RetrieveUpdateAPIView
 from rest_framework.response import Response
@@ -19,8 +21,8 @@ from .serializers import (
     TitleSerializer, UserAdminSerializer, UserProfileSerializer)
 from .mixins import CreateRetrieveDestroyViewSet
 from .permissions import (
-    IsAuthorOrReadOnly,
     ProfileOwner, RolePermissions,
+    RolePermissionsAuthorOrReadOnly,
     RolePermissionsOrReadOnly)
 from auth_yamdb.models import ConfirmationCode
 from auth_yamdb.utils import bland_code_hasher, salty_code_hasher
@@ -38,6 +40,7 @@ class SignUpView(APIView):
             user = User.objects.create(**serializer.validated_data)
             code_to_mail = bland_code_hasher(
                 *serializer.validated_data.values())
+            print(code_to_mail)
             code_to_db = salty_code_hasher(code_to_mail)
             username, mail = serializer.validated_data.values()
             send_mail(
@@ -123,8 +126,7 @@ class TitlesViewSet(viewsets.ModelViewSet):
 class ReviewViewSet(viewsets.ModelViewSet):
     """Представление для отзывов."""
     serializer_class = ReviewSerializer
-    permission_classes = [
-        RolePermissions | IsAuthorOrReadOnly]
+    permission_classes = [RolePermissionsAuthorOrReadOnly]
     pagination_class = LimitOffsetPagination
 
     def get_queryset(self):
@@ -133,14 +135,19 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         title = get_object_or_404(Title, id=self.kwargs.get('title_id'))
-        serializer.save(author=self.request.user, title=title)
+        try:
+            serializer.save(author=self.request.user, title=title)
+        except IntegrityError:
+            raise serializers.ValidationError(
+                detail="Nobody wants your opinions the second time",
+                code=HTTPStatus.BAD_REQUEST
+            )
 
 
 class CommentsViewSet(viewsets.ModelViewSet):
     """Представление для комментариев."""
     serializer_class = CommentsSerializer
-    permission_classes = [
-        RolePermissions | IsAuthorOrReadOnly]
+    permission_classes = [RolePermissionsAuthorOrReadOnly]
     pagination_class = LimitOffsetPagination
 
     def get_queryset(self):
@@ -148,5 +155,5 @@ class CommentsViewSet(viewsets.ModelViewSet):
         return review.comments.all()
 
     def perform_create(self, serializer):
-        title = get_object_or_404(Title, id=self.kwargs.get('title_id'))
-        serializer.save(author=self.request.user, title=title)
+        review = get_object_or_404(Review, id=self.kwargs.get('review_id'))
+        serializer.save(author=self.request.user, review=review)

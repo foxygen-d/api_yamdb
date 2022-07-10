@@ -77,6 +77,10 @@ class Review(models.Model):
         ordering = ['-pub_date']
         verbose_name = 'Отзыв'
         verbose_name_plural = 'Отзывы'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['title', 'author'], name='unique_review'),
+        ]
 
     def __str__(self):
         return f'Отзыв на {self.title}, оценка: {self.score}'

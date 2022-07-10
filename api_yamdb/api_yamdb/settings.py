@@ -99,10 +99,6 @@ AUTH_PASSWORD_VALIDATORS = [
 
 # Internationalization
 
-LOCALE_PATHS = (
-    os.path.join(BASE_DIR, 'locale'),
-)
-
 LANGUAGES = [
     ('en', _('English')),
     ('ru', _('Russian'))
