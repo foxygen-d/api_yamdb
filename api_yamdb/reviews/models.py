@@ -1,54 +1,73 @@
-from django.contrib.auth.models import Group, AbstractUser
-from django.db import models
 from django.contrib.auth import get_user_model
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
-from django.urls import reverse
 
 
-class User(AbstractUser):
+User = get_user_model()
 
-    role = models.ForeignKey(
-        Group,
-        null=False,
-        blank=False,
-        to_field='name',
-        choices=[
-            ('user', 'User'),
-            ('moderator', 'Moderator'),
-            ('admin', 'Admin'),
-        ],
-        default='user',
-        related_name='users',
-        on_delete=models.SET_DEFAULT
+
+class Title(models.Model):
+    name = models.TextField()
+    year = models.IntegerField()
+    description = models.TextField()
+    category = models.ForeignKey(
+        'Category',
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True
     )
-    bio = models.TextField(
-        'Biography',
-        null=True,
-        blank=True
+    genre = models.ManyToManyField(
+        'Genre',
+        through='GenreTitle'
     )
+
+
+class Genre(models.Model):
+    name = models.CharField(max_length=256)
+    slug = models.SlugField(unique=True)
+
+    def __str__(self):
+        return self.name
+
+
+class GenreTitle(models.Model):
+    title = models.ForeignKey(Title, on_delete=models.SET_NULL, null=True)
+    genre = models.ForeignKey(Genre, on_delete=models.SET_NULL, null=True)
+
+    def __str__(self):
+        return f'{self.title} {self.genre}'
+
+
+class Category(models.Model):
+    name = models.CharField(max_length=256)
+    slug = models.SlugField(unique=True)
+
+    def __str__(self):
+        return self.name
 
 
 class Review(models.Model):
     """Модель для отзывов."""
     title = models.ForeignKey(
-        'Title',
+        Title,
         on_delete=models.CASCADE,
-        related_name='title',
+        related_name='reviews',
         verbose_name='Произведение',
     )
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        related_name='author',
+        related_name='reviews',
         verbose_name='Автор',
     )
     text = models.TextField('Текст отзыва', help_text='Новый отзыв')
     score = models.SmallIntegerField(
         validators=[
-            MinValueValidator(1, 'Ниже 1 оценку произведению ставить нельзя!'),
-            MaxValueValidator(10, 'Выше 10 оценку произведению ставить нельзя!')
-            ],
+            MinValueValidator(
+                1, 'Ниже 1 оценку произведению ставить нельзя!'),
+            MaxValueValidator(
+                10, 'Выше 10 оценку произведению ставить нельзя!')
+        ],
     )
     pub_date = models.DateTimeField(
         verbose_name='Дата публикации отзыва',
@@ -56,32 +75,32 @@ class Review(models.Model):
     )
 
     class Meta:
-        ordering = ['-pub_date']
+        ordering = ['pub_date']
         verbose_name = 'Отзыв'
         verbose_name_plural = 'Отзывы'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['title', 'author'],
+                name='unique_review'
+            ),
+        ]
 
     def __str__(self):
         return f'Отзыв на {self.title}, оценка: {self.score}'
 
 
-class Comments(models.Model):
+class Comment(models.Model):
     """Модель для комментариев."""
-    title = models.ForeignKey(
-        'Title',
-        on_delete=models.CASCADE,
-        related_name='title',
-        verbose_name='Произведение',
-    )
     review = models.ForeignKey(
         Review,
         on_delete=models.CASCADE,
-        related_name='title',
+        related_name='comments',
         verbose_name='Отзыв',
     )
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        related_name='author',
+        related_name='comments',
         verbose_name='Автор',
     )
     text = models.TextField('Текст комментария', help_text='Новый комментарий')
@@ -91,7 +110,7 @@ class Comments(models.Model):
     )
 
     class Meta:
-        ordering = ['-pub_date']
+        ordering = ['pub_date']
         verbose_name = 'Комментарий'
         verbose_name_plural = 'Комментарии'
 
