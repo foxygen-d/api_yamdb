@@ -13,9 +13,6 @@ class ReviewsConfig(AppConfig):
         """Code to run after migration is completed."""
         verbosity = kwargs['verbosity']
         self.setup_permissions(verbosity=verbosity)
-        # uncomment & migrate to get test objects
-        # comment out again before you run pytest lest it screws up your tests
-        # self.prepopulate_database(verbosity=verbosity)
 
     def setup_permissions(self, **kwargs) -> None:
         """Get and set permissions for the groups that should have them."""
@@ -26,12 +23,10 @@ class ReviewsConfig(AppConfig):
             print("Setting up permissions for all user roles.")
         Review = self.get_model('Review')
         Comment = self.get_model('Comment')
-        # get all auto-generated permissions for Review and Comment models
         review_permissions = Permission.objects.filter(
             content_type=ContentType.objects.get_for_model(Review))
         comment_permissions = Permission.objects.filter(
             content_type=ContentType.objects.get_for_model(Comment))
-        # create new groups if DoesNotExist and assign respective permissions
         Group.objects.get_or_create(name='user')
         moderators, created = Group.objects.get_or_create(name="moderator")
         if verbosity >= 2:

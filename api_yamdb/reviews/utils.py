@@ -1,6 +1,7 @@
-import os
 import csv
-from typing import Dict, List, AnyStr
+import os
+from typing import AnyStr, Dict, List
+
 from django.conf import settings
 
 

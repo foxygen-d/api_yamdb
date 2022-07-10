@@ -1,29 +1,27 @@
-from django.shortcuts import get_object_or_404
-from django.contrib.auth import get_user_model
-from django.core.mail import send_mail
-from rest_framework import viewsets, filters, status, permissions
-from rest_framework.views import APIView
-from rest_framework.generics import RetrieveUpdateAPIView
-from rest_framework.response import Response
-from rest_framework.pagination import (
-    LimitOffsetPagination, PageNumberPagination)
-from rest_framework_simplejwt.views import TokenViewBase
-from django_filters.rest_framework import DjangoFilterBackend
-
-from reviews.models import User, Review, Title, Category, Genre
-from .filters import TitleFilter
-from .serializers import (
-    ReviewSerializer, CommentsSerializer,
-    CategorySerializer, GenreSerializer,
-    CodeTokenObtainSerializer, SignUpSerializer, TitleReadonlySerializer,
-    TitleSerializer, UserAdminSerializer, UserProfileSerializer)
-from .mixins import CreateRetrieveDestroyViewSet
-from .permissions import (
-    IsAuthorOrReadOnly,
-    ProfileOwner, RolePermissions,
-    RolePermissionsOrReadOnly)
 from auth_yamdb.models import ConfirmationCode
 from auth_yamdb.utils import bland_code_hasher, salty_code_hasher
+from django.contrib.auth import get_user_model
+from django.core.mail import send_mail
+from django.shortcuts import get_object_or_404
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import filters, permissions, status, viewsets
+from rest_framework.generics import RetrieveUpdateAPIView
+from rest_framework.pagination import (LimitOffsetPagination,
+                                       PageNumberPagination)
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from rest_framework_simplejwt.views import TokenViewBase
+from reviews.models import Category, Genre, Review, Title, User
+
+from .filters import TitleFilter
+from .mixins import CreateRetrieveDestroyViewSet
+from .permissions import (IsAuthorOrReadOnly, RolePermissions,
+                          RolePermissionsOrReadOnly)
+from .serializers import (CategorySerializer, CodeTokenObtainSerializer,
+                          CommentsSerializer, GenreSerializer,
+                          ReviewSerializer, SignUpSerializer,
+                          TitleReadonlySerializer, TitleSerializer,
+                          UserAdminSerializer, UserProfileSerializer)
 
 
 User = get_user_model()
@@ -58,7 +56,6 @@ class TokenObtainAccessView(TokenViewBase):
 class ProfileUpdateView(RetrieveUpdateAPIView):
     queryset = User.objects.all()
     serializer_class = UserProfileSerializer
-    permission_classes = [ProfileOwner | RolePermissions]
 
     def get_object(self):
         return self.request.user
@@ -123,8 +120,7 @@ class TitlesViewSet(viewsets.ModelViewSet):
 class ReviewViewSet(viewsets.ModelViewSet):
     """Представление для отзывов."""
     serializer_class = ReviewSerializer
-    permission_classes = [
-        RolePermissions | IsAuthorOrReadOnly]
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly, IsAuthorOrReadOnly)
     pagination_class = LimitOffsetPagination
 
     def get_queryset(self):
@@ -139,14 +135,15 @@ class ReviewViewSet(viewsets.ModelViewSet):
 class CommentsViewSet(viewsets.ModelViewSet):
     """Представление для комментариев."""
     serializer_class = CommentsSerializer
-    permission_classes = [
-        RolePermissions | IsAuthorOrReadOnly]
+    permission_classes = [IsAuthorOrReadOnly]
     pagination_class = LimitOffsetPagination
 
     def get_queryset(self):
-        review = get_object_or_404(Review, id=self.kwargs.get('review_id'))
+        review = get_object_or_404(Review, id=self.kwargs.get("review_id"))
         return review.comments.all()
 
     def perform_create(self, serializer):
-        title = get_object_or_404(Title, id=self.kwargs.get('title_id'))
-        serializer.save(author=self.request.user, title=title)
+        title_id = self.kwargs.get('title_id')
+        review_id = self.kwargs.get('review_id')
+        review = get_object_or_404(Review, id=review_id, title=title_id)
+        serializer.save(author=self.request.user, review=review)
