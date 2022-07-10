@@ -22,7 +22,9 @@ from .serializers import (CategorySerializer, CodeTokenObtainSerializer,
                           ReviewSerializer, SignUpSerializer,
                           TitleReadonlySerializer, TitleSerializer,
                           UserAdminSerializer, UserProfileSerializer)
-
+from rest_framework import serializers
+from http import HTTPStatus
+from django.db import IntegrityError
 
 User = get_user_model()
 
@@ -124,13 +126,18 @@ class ReviewViewSet(viewsets.ModelViewSet):
     pagination_class = LimitOffsetPagination
 
     def get_queryset(self):
-        title = get_object_or_404(Title, pk=self.kwargs.get("title_id"))
+        title = get_object_or_404(Title, id=self.kwargs.get('title_id'))
         return title.reviews.all()
 
     def perform_create(self, serializer):
-        title_id = self.kwargs.get('title_id')
-        title = get_object_or_404(Title, id=title_id)
-        serializer.save(author=self.request.user, title=title)
+        title = get_object_or_404(Title, id=self.kwargs.get('title_id'))
+        try:
+            serializer.save(author=self.request.user, title=title)
+        except IntegrityError:
+            raise serializers.ValidationError(
+                detail="Nobody wants your opinions the second time",
+                code=HTTPStatus.BAD_REQUEST
+            )
 
 
 class CommentsViewSet(viewsets.ModelViewSet):

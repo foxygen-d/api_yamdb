@@ -49,7 +49,7 @@ class Category(models.Model):
 class Review(models.Model):
     """Модель для отзывов."""
     title = models.ForeignKey(
-        Title,
+        'Title',
         on_delete=models.CASCADE,
         related_name='reviews',
         verbose_name='Произведение',
@@ -71,19 +71,16 @@ class Review(models.Model):
     )
     pub_date = models.DateTimeField(
         verbose_name='Дата публикации отзыва',
-        auto_now_add=True,
-        db_index=True
+        auto_now_add=True
     )
 
     class Meta:
-        ordering = ['pub_date']
+        ordering = ['-pub_date']
         verbose_name = 'Отзыв'
         verbose_name_plural = 'Отзывы'
         constraints = [
             models.UniqueConstraint(
-                fields=['title', 'author'],
-                name='unique_title_author'
-            ),
+                fields=['title', 'author'], name='unique_review'),
         ]
 
     def __str__(self):
