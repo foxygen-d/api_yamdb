@@ -131,8 +131,7 @@ class ReviewSerializer(serializers.ModelSerializer):
     author = serializers.SlugRelatedField(
         default=serializers.CurrentUserDefault(),
         slug_field='username',
-        read_only=True
-        )
+        read_only=True)
 
     class Meta:
         model = Review
