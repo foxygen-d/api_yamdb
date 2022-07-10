@@ -71,7 +71,8 @@ class Review(models.Model):
     )
     pub_date = models.DateTimeField(
         verbose_name='Дата публикации отзыва',
-        auto_now_add=True
+        auto_now_add=True,
+        db_index=True
     )
 
     class Meta:
@@ -81,7 +82,7 @@ class Review(models.Model):
         constraints = [
             models.UniqueConstraint(
                 fields=['title', 'author'],
-                name='unique_review'
+                name='unique_title_author'
             ),
         ]
 
