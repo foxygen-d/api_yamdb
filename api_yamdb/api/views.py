@@ -22,9 +22,7 @@ from .serializers import (CategorySerializer, CodeTokenObtainSerializer,
                           ReviewSerializer, SignUpSerializer,
                           TitleReadonlySerializer, TitleSerializer,
                           UserAdminSerializer, UserProfileSerializer)
-from http import HTTPStatus
-from rest_framework import serializers
-from django.db import IntegrityError
+
 
 User = get_user_model()
 
