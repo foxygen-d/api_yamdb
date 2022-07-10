@@ -22,7 +22,9 @@ from .serializers import (CategorySerializer, CodeTokenObtainSerializer,
                           ReviewSerializer, SignUpSerializer,
                           TitleReadonlySerializer, TitleSerializer,
                           UserAdminSerializer, UserProfileSerializer)
-
+from http import HTTPStatus
+from rest_framework import serializers
+from django.db import IntegrityError
 
 User = get_user_model()
 
@@ -129,7 +131,13 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         title = get_object_or_404(Title, id=self.kwargs.get('title_id'))
-        serializer.save(author=self.request.user, title=title)
+        try:
+            serializer.save(author=self.request.user, title=title)
+        except IntegrityError:
+            raise serializers.ValidationError(
+                detail="Nobody wants your opinion the second time",
+                code=HTTPStatus.BAD_REQUEST
+            )
 
 
 class CommentsViewSet(viewsets.ModelViewSet):
