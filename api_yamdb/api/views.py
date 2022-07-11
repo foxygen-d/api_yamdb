@@ -1,10 +1,13 @@
+from http import HTTPStatus
+
 from auth_yamdb.models import ConfirmationCode
 from auth_yamdb.utils import bland_code_hasher, salty_code_hasher
 from django.contrib.auth import get_user_model
 from django.core.mail import send_mail
+from django.db import IntegrityError
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import filters, permissions, status, viewsets
+from rest_framework import filters, permissions, serializers, status, viewsets
 from rest_framework.generics import RetrieveUpdateAPIView
 from rest_framework.pagination import (LimitOffsetPagination,
                                        PageNumberPagination)
@@ -15,16 +18,14 @@ from reviews.models import Category, Genre, Review, Title, User
 
 from .filters import TitleFilter
 from .mixins import CreateRetrieveDestroyViewSet
-from .permissions import (RolePermissionsAuthorOrReadOnly, RolePermissions,
+from .permissions import (RolePermissions, RolePermissionsAuthorOrReadOnly,
                           RolePermissionsOrReadOnly)
 from .serializers import (CategorySerializer, CodeTokenObtainSerializer,
                           CommentsSerializer, GenreSerializer,
                           ReviewSerializer, SignUpSerializer,
                           TitleReadonlySerializer, TitleSerializer,
                           UserAdminSerializer, UserProfileSerializer)
-from rest_framework import serializers
-from http import HTTPStatus
-from django.db import IntegrityError
+
 
 User = get_user_model()
 
