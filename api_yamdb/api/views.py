@@ -139,7 +139,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
                 detail="Nobody wants your opinions the second time",
                 code=HTTPStatus.BAD_REQUEST
             )
-
+# ...
 
 class CommentsViewSet(viewsets.ModelViewSet):
     """Представление для комментариев."""
