@@ -123,7 +123,7 @@ class TitlesViewSet(viewsets.ModelViewSet):
 class ReviewViewSet(viewsets.ModelViewSet):
     """Представление для отзывов."""
     serializer_class = ReviewSerializer
-    permission_classes = [RolePermissionsAuthorOrReadOnly]
+    permission_classes = (RolePermissionsAuthorOrReadOnly,)
     pagination_class = LimitOffsetPagination
 
     def get_queryset(self):
@@ -144,7 +144,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
 class CommentsViewSet(viewsets.ModelViewSet):
     """Представление для комментариев."""
     serializer_class = CommentsSerializer
-    permission_classes = [RolePermissionsAuthorOrReadOnly]
+    permission_classes = (RolePermissionsAuthorOrReadOnly,)
     pagination_class = LimitOffsetPagination
 
     def get_queryset(self):
