@@ -141,6 +141,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
             )
 # ...
 
+
 class CommentsViewSet(viewsets.ModelViewSet):
     """Представление для комментариев."""
     serializer_class = CommentsSerializer
