@@ -132,13 +132,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         title = get_object_or_404(Title, id=self.kwargs.get('title_id'))
-        try:
-            serializer.save(author=self.request.user, title=title)
-        except IntegrityError:
-            raise serializers.ValidationError(
-                detail='Nobody wants your opinions the second time',
-                code=HTTPStatus.BAD_REQUEST
-            )
+        serializer.save(author=self.request.user, title=title)
 
 
 class CommentsViewSet(viewsets.ModelViewSet):
