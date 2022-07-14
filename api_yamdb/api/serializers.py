@@ -7,6 +7,7 @@ from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from rest_framework import serializers
 from rest_framework_simplejwt.tokens import AccessToken
+
 from reviews.models import Category, Comment, Genre, Review, Title
 
 
@@ -20,9 +21,9 @@ class SignUpSerializer(serializers.ModelSerializer):
         fields = ['username', 'email']
 
     def validate_username(self, value):
-        if value == 'me':
+        if value.lower() == 'me':
             raise serializers.ValidationError(
-                "Forbidden username, go away.", code=HTTPStatus.BAD_REQUEST
+                'Forbidden username, go away.', code=HTTPStatus.BAD_REQUEST
             )
         return value
 

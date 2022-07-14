@@ -81,7 +81,7 @@ class GenresViewSet(CreateRetrieveDestroyViewSet):
     filter_backends = [filters.SearchFilter]
     permission_classes = [RolePermissionsOrReadOnly]
     search_fields = ['name']
-    lookup_field = "slug"
+    lookup_field = 'slug'
 
 
 class CategoriesViewSet(CreateRetrieveDestroyViewSet):
@@ -91,7 +91,7 @@ class CategoriesViewSet(CreateRetrieveDestroyViewSet):
     filter_backends = [filters.SearchFilter]
     permission_classes = [RolePermissionsOrReadOnly]
     search_fields = ['name']
-    lookup_field = "slug"
+    lookup_field = 'slug'
 
 
 class TitlesViewSet(viewsets.ModelViewSet):
@@ -136,10 +136,9 @@ class ReviewViewSet(viewsets.ModelViewSet):
             serializer.save(author=self.request.user, title=title)
         except IntegrityError:
             raise serializers.ValidationError(
-                detail="Nobody wants your opinions the second time",
+                detail='Nobody wants your opinions the second time',
                 code=HTTPStatus.BAD_REQUEST
             )
-# ...
 
 
 class CommentsViewSet(viewsets.ModelViewSet):
@@ -149,7 +148,7 @@ class CommentsViewSet(viewsets.ModelViewSet):
     pagination_class = LimitOffsetPagination
 
     def get_queryset(self):
-        review = get_object_or_404(Review, id=self.kwargs.get("review_id"))
+        review = get_object_or_404(Review, id=self.kwargs.get('review_id'))
         return review.comments.all()
 
     def perform_create(self, serializer):

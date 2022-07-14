@@ -15,7 +15,7 @@ class UsersConfig(AppConfig):
         """Get and set permissions for the groups that should have them."""
         from django.contrib.auth.models import Group, Permission
 
-        admins, created = Group.objects.get_or_create(name="admin")
+        admins, created = Group.objects.get_or_create(name='admin')
         if verbosity >= 2:
             print('Setting up administrator permissions.')
         admins.permissions.set(Permission.objects.all())

@@ -20,7 +20,7 @@ class ReviewsConfig(AppConfig):
         from django.contrib.auth.models import Group, Permission
         verbosity = kwargs['verbosity']
         if verbosity >= 1:
-            print("Setting up permissions for all user roles.")
+            print('Setting up permissions for all user roles.')
         Review = self.get_model('Review')
         Comment = self.get_model('Comment')
         review_permissions = Permission.objects.filter(
@@ -28,7 +28,7 @@ class ReviewsConfig(AppConfig):
         comment_permissions = Permission.objects.filter(
             content_type=ContentType.objects.get_for_model(Comment))
         Group.objects.get_or_create(name='user')
-        moderators, created = Group.objects.get_or_create(name="moderator")
+        moderators, created = Group.objects.get_or_create(name='moderator')
         if verbosity >= 2:
             print('Setting up moderator permissions.')
         moderator_permissions = (
@@ -54,7 +54,7 @@ class ReviewsConfig(AppConfig):
         from django.contrib.auth.models import Group
 
         if verbosity >= 1:
-            print("Populating database with test data.")
+            print('Populating database with test data.')
         User = get_user_model()
         Genre = self.get_model('Genre')
         Category = self.get_model('Category')
