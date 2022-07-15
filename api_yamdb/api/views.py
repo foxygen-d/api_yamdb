@@ -1,32 +1,37 @@
+from functools import partial
 from http import HTTPStatus
-from django.db import IntegrityError
-from django.shortcuts import get_object_or_404
-from django.contrib.auth import get_user_model
-from django.core.mail import send_mail
-from rest_framework import viewsets, filters, status, permissions, serializers
-from rest_framework.views import APIView
-from rest_framework.generics import RetrieveUpdateAPIView
-from rest_framework.response import Response
-from rest_framework.pagination import (
-    LimitOffsetPagination, PageNumberPagination)
-from rest_framework_simplejwt.views import TokenViewBase
-from django_filters.rest_framework import DjangoFilterBackend
 
-from reviews.models import User, Review, Title, Category, Genre
-from .filters import TitleFilter
-from .serializers import (
-    ReviewSerializer, CommentsSerializer,
-    CategorySerializer, GenreSerializer,
-    CodeTokenObtainSerializer, SignUpSerializer, TitleReadonlySerializer,
-    TitleSerializer, UserAdminSerializer, UserProfileSerializer)
-from .mixins import CreateRetrieveDestroyViewSet
-from .permissions import (
-    ProfileOwner, RolePermissions,
-    RolePermissionsAuthorOrReadOnly,
-    RolePermissionsOrReadOnly)
 from auth_yamdb.models import ConfirmationCode
 from auth_yamdb.utils import bland_code_hasher, salty_code_hasher
+from django.contrib.auth import get_user_model
+from django.core.mail import send_mail
+from django.db import IntegrityError
+from django.conf import settings
+from django.shortcuts import get_object_or_404
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import filters, permissions, serializers, status, viewsets
+from rest_framework.decorators import action
+from rest_framework.generics import RetrieveUpdateAPIView
+from rest_framework.pagination import (LimitOffsetPagination,
+                                       PageNumberPagination)
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from rest_framework_simplejwt.views import TokenViewBase
+from reviews.models import Category, Genre, Review, Title, User
 
+from .filters import TitleFilter
+from .mixins import CreateRetrieveDestroyViewSet
+from .permissions import (RolePermissions, RolePermissionsAuthorOrReadOnly,
+                          RolePermissionsOrReadOnly)
+from .serializers import (CategorySerializer, CodeTokenObtainSerializer,
+                          CommentsSerializer, GenreSerializer,
+                          ReviewSerializer, SignUpSerializer,
+                          TitleReadonlySerializer, TitleSerializer,
+                          UserSerializer, UserProfileSerializer)
+
+
+MAIL_SUBJECT = 'YAMDB: Your confirmation code'
+MAIL_BODY = 'Hi {username}, here is your code: {code}'
 
 User = get_user_model()
 
@@ -36,45 +41,53 @@ class SignUpView(APIView):
 
     def post(self, request):
         serializer = SignUpSerializer(data=request.data)
-        if serializer.is_valid(raise_exception=True):
-            user = User.objects.create(**serializer.validated_data)
-            code_to_mail = bland_code_hasher(
-                *serializer.validated_data.values())
-            print(code_to_mail)
-            code_to_db = salty_code_hasher(code_to_mail)
-            username, mail = serializer.validated_data.values()
-            send_mail(
-                'Your code',
-                f'Hi {username}, here is your code: {code_to_mail}',
-                'DjangoClient@yandex.ru',
-                [mail])
-            ConfirmationCode.objects.create(username=user, value=code_to_db)
-            return Response(serializer.validated_data)
-        else:
-            return Response(serializer.errors)
+        serializer.is_valid(raise_exception=True)
+        user = User.objects.create(**serializer.validated_data)
+        code_to_mail = bland_code_hasher(
+            *serializer.validated_data.values())
+        print(code_to_mail)
+        code_to_db = salty_code_hasher(code_to_mail)
+        username, mail = serializer.validated_data.values()
+        send_mail(
+            MAIL_SUBJECT,
+            MAIL_BODY.format(username=username, code=code_to_mail),
+            settings.SMTP_ADDRESS,
+            [mail])
+        ConfirmationCode.objects.create(username=user, value=code_to_db)
+        return Response(serializer.validated_data)
 
 
 class TokenObtainAccessView(TokenViewBase):
     serializer_class = CodeTokenObtainSerializer
 
 
-class ProfileUpdateView(RetrieveUpdateAPIView):
-    queryset = User.objects.all()
-    serializer_class = UserProfileSerializer
-    permission_classes = [ProfileOwner | RolePermissions]
-
-    def get_object(self):
-        return self.request.user
+# class ProfileUpdateView(RetrieveUpdateAPIView):
+#     queryset = User.objects.all()
+#     serializer_class = UserProfileSerializer
+# 
+#     def get_object(self):
+#         return self.request.user
 
 
 class UsersViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
-    serializer_class = UserAdminSerializer
+    serializer_class = UserSerializer
     permission_classes = [RolePermissions]
     pagination_class = PageNumberPagination
     filter_backends = [filters.SearchFilter, DjangoFilterBackend]
     search_fields = ['username']
     lookup_field = 'username'
+
+    @action(detail=False, methods=['get', 'patch'],
+            permission_classes=[permissions.IsAuthenticated])
+    def me(self, request):
+        user = self.request.user
+        if request.method == 'GET':
+            serializer = UserProfileSerializer(user)
+        serializer = UserProfileSerializer(user, request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
 
 
 class GenresViewSet(CreateRetrieveDestroyViewSet):
@@ -84,7 +97,7 @@ class GenresViewSet(CreateRetrieveDestroyViewSet):
     filter_backends = [filters.SearchFilter]
     permission_classes = [RolePermissionsOrReadOnly]
     search_fields = ['name']
-    lookup_field = "slug"
+    lookup_field = 'slug'
 
 
 class CategoriesViewSet(CreateRetrieveDestroyViewSet):
@@ -94,7 +107,7 @@ class CategoriesViewSet(CreateRetrieveDestroyViewSet):
     filter_backends = [filters.SearchFilter]
     permission_classes = [RolePermissionsOrReadOnly]
     search_fields = ['name']
-    lookup_field = "slug"
+    lookup_field = 'slug'
 
 
 class TitlesViewSet(viewsets.ModelViewSet):
@@ -126,7 +139,7 @@ class TitlesViewSet(viewsets.ModelViewSet):
 class ReviewViewSet(viewsets.ModelViewSet):
     """Представление для отзывов."""
     serializer_class = ReviewSerializer
-    permission_classes = [RolePermissionsAuthorOrReadOnly]
+    permission_classes = (RolePermissionsAuthorOrReadOnly,)
     pagination_class = LimitOffsetPagination
 
     def get_queryset(self):
@@ -147,7 +160,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
 class CommentsViewSet(viewsets.ModelViewSet):
     """Представление для комментариев."""
     serializer_class = CommentsSerializer
-    permission_classes = [RolePermissionsAuthorOrReadOnly]
+    permission_classes = (RolePermissionsAuthorOrReadOnly,)
     pagination_class = LimitOffsetPagination
 
     def get_queryset(self):
@@ -155,5 +168,7 @@ class CommentsViewSet(viewsets.ModelViewSet):
         return review.comments.all()
 
     def perform_create(self, serializer):
-        review = get_object_or_404(Review, id=self.kwargs.get('review_id'))
+        title_id = self.kwargs.get('title_id')
+        review_id = self.kwargs.get('review_id')
+        review = get_object_or_404(Review, id=review_id, title=title_id)
         serializer.save(author=self.request.user, review=review)

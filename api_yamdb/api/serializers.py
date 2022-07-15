@@ -1,13 +1,14 @@
 from http import HTTPStatus
 
 from django.contrib.auth import authenticate, get_user_model
-from django.http import Http404
-from django.utils import timezone
 from django.db.models import Avg
+from django.http import Http404
+from django.shortcuts import get_object_or_404
+from django.utils import timezone
 from rest_framework import serializers
 from rest_framework_simplejwt.tokens import AccessToken
 
-from reviews.models import Category, Genre, Review, Comment, Title
+from reviews.models import Category, Comment, Genre, Review, Title
 
 
 User = get_user_model()
@@ -20,9 +21,9 @@ class SignUpSerializer(serializers.ModelSerializer):
         fields = ['username', 'email']
 
     def validate_username(self, value):
-        if value == 'me':
+        if value.lower() == 'me':
             raise serializers.ValidationError(
-                "Forbidden username, go away.", code=HTTPStatus.BAD_REQUEST
+                'Forbidden username, go away.', code=HTTPStatus.BAD_REQUEST
             )
         return value
 
@@ -44,23 +45,17 @@ class CodeTokenObtainSerializer(serializers.Serializer):
             }
 
 
-class UserProfileSerializer(serializers.ModelSerializer):
+class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
         fields = (
             'username', 'email', 'first_name',
             'last_name', 'bio', 'role')
-        read_only_fields = ['role']
 
 
-class UserAdminSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = User
-        fields = (
-            'username', 'email', 'first_name',
-            'last_name', 'bio', 'role')
+class UserProfileSerializer(UserSerializer):
+    role = serializers.CharField(read_only=True)
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -124,13 +119,26 @@ class TitleReadonlySerializer(serializers.ModelSerializer):
 
 class ReviewSerializer(serializers.ModelSerializer):
     """Сериализатор для отзывов."""
-    author = serializers.SlugRelatedField(slug_field='username',
-                                          read_only=True)
+    author = serializers.SlugRelatedField(
+        default=serializers.CurrentUserDefault(),
+        slug_field='username',
+        read_only=True)
 
     class Meta:
         model = Review
         fields = '__all__'
         read_only_fields = ['title', 'author']
+
+    def validate(self, data):
+        request = self.context['request']
+        author = request.user
+        title_id = self.context.get('view').kwargs.get('title_id')
+        title = get_object_or_404(Title, pk=title_id)
+        if (request.method == 'POST'
+                and Review.objects.filter(
+                    title=title, author=author).exists()):
+            raise serializers.ValidationError('Отзыв уже существует!')
+        return data
 
     def validate_score(self, value):
         if 10 < value < 1:
@@ -142,6 +150,8 @@ class ReviewSerializer(serializers.ModelSerializer):
 class CommentsSerializer(serializers.ModelSerializer):
     """Сериализатор для комментариев."""
     author = serializers.SlugRelatedField(slug_field='username',
+                                          read_only=True)
+    review = serializers.SlugRelatedField(slug_field='text',
                                           read_only=True)
 
     class Meta:

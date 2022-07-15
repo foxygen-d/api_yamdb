@@ -48,7 +48,7 @@ python3 -m venv env
 ```
 Активировать виртуальное окружение:
 ```
-source env/bin/activatepython3 -m venv env
+source env/bin/activate
 ```
 
 Установить зависимости из файла requirements.txt:
