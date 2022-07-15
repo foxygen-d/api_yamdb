@@ -3,6 +3,9 @@ from django.db import models
 
 
 class User(AbstractUser):
+    USER = 'user'
+    MODERATOR = 'moderator'
+    ADMIN = 'admin'
     email = models.EmailField(
         'Email',
         null=False,
@@ -14,9 +17,9 @@ class User(AbstractUser):
         null=False,
         blank=False,
         choices=[
-            ('user', 'User'),
-            ('moderator', 'Moderator'),
-            ('admin', 'Admin'),
+            (USER, 'User'),
+            (MODERATOR, 'Moderator'),
+            (ADMIN, 'Admin'),
         ],
         default='user'
     )
@@ -26,9 +29,9 @@ class User(AbstractUser):
         blank=False,
         to_field='name',
         choices=[
-            ('user', 'User'),
-            ('moderator', 'Moderator'),
-            ('admin', 'Admin'),
+            (USER, 'User'),
+            (MODERATOR, 'Moderator'),
+            (ADMIN, 'Admin'),
         ],
         default='user',
         related_name='users',
