@@ -28,7 +28,6 @@ v1_router.register(
 
 
 urlpatterns = [
-    # path('v1/users/me/', ProfileUpdateView.as_view()),
     path('v1/auth/signup/', SignUpView.as_view(), name='signup'),
     path('v1/auth/token/', TokenObtainAccessView.as_view(), name='token'),
     path('v1/', include(v1_router.urls)),

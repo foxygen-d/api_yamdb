@@ -1,4 +1,3 @@
-from functools import partial
 from http import HTTPStatus
 
 from auth_yamdb.models import ConfirmationCode
@@ -11,14 +10,13 @@ from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, permissions, serializers, status, viewsets
 from rest_framework.decorators import action
-from rest_framework.generics import RetrieveUpdateAPIView
 from rest_framework.pagination import (LimitOffsetPagination,
                                        PageNumberPagination)
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.views import TokenViewBase
-from reviews.models import Category, Genre, Review, Title, User
 
+from reviews.models import Category, Genre, Review, Title, User
 from .filters import TitleFilter
 from .mixins import CreateRetrieveDestroyViewSet
 from .permissions import (RolePermissions, RolePermissionsAuthorOrReadOnly,
@@ -59,14 +57,6 @@ class SignUpView(APIView):
 
 class TokenObtainAccessView(TokenViewBase):
     serializer_class = CodeTokenObtainSerializer
-
-
-# class ProfileUpdateView(RetrieveUpdateAPIView):
-#     queryset = User.objects.all()
-#     serializer_class = UserProfileSerializer
-# 
-#     def get_object(self):
-#         return self.request.user
 
 
 class UsersViewSet(viewsets.ModelViewSet):
