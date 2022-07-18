@@ -19,12 +19,12 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'rest_framework_simplejwt',
     'django_filters',
     'reviews.apps.ReviewsConfig',
     'users.apps.UsersConfig',
     'auth_yamdb.apps.AuthConfig',
     'api.apps.ApiConfig',
-    'rest_framework_simplejwt',
     'rest_framework',
 ]
 
@@ -139,3 +139,4 @@ EMAIL_PORT = 465
 EMAIL_HOST_USER = 'DjangoClient'
 EMAIL_HOST_PASSWORD = 'dldaimvcininobxh'
 EMAIL_USE_SSL = True
+SMTP_ADDRESS = 'DjangoClient@yandex.ru'

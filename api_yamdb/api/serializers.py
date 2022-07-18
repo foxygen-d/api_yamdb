@@ -43,23 +43,17 @@ class CodeTokenObtainSerializer(serializers.Serializer):
             }
 
 
-class UserProfileSerializer(serializers.ModelSerializer):
+class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
         fields = (
             'username', 'email', 'first_name',
             'last_name', 'bio', 'role')
-        read_only_fields = ['role']
 
 
-class UserAdminSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = User
-        fields = (
-            'username', 'email', 'first_name',
-            'last_name', 'bio', 'role')
+class UserProfileSerializer(UserSerializer):
+    role = serializers.CharField(read_only=True)
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -151,3 +145,4 @@ class CommentsSerializer(serializers.ModelSerializer):
     class Meta:
         model = Comment
         fields = '__all__'
+        read_only_fields = ['review']
