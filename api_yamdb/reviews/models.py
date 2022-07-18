@@ -1,8 +1,8 @@
 from django.contrib.auth import get_user_model
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
-from django.utils import timezone
-from django.core.exceptions import ValidationError
+
+from .validators import validate_year
 
 
 User = get_user_model()
@@ -42,13 +42,6 @@ class Category(models.Model):
 
 class Title(models.Model):
     """Модель для произведений."""
-    def validate_year(value):
-        if value > timezone.now().year:
-            raise ValidationError(
-                'Нельзя указать год больше текущего'
-            )
-        return value
-
     name = models.TextField('Название произведения', db_index=True)
     year = models.IntegerField('Год создания', validators=[validate_year])
     description = models.TextField('Описание')
