@@ -1,49 +1,72 @@
 from django.contrib.auth import get_user_model
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
+from django.utils import timezone
+from django.core.exceptions import ValidationError
 
 
 User = get_user_model()
 
 
 class Genre(models.Model):
-    name = models.CharField(max_length=256)
+    """Модель для жанров."""
+    name = models.CharField(
+        'Название жанра',
+        max_length=256
+    )
     slug = models.SlugField(unique=True)
+
+    class Meta:
+        verbose_name = 'Жанр'
+        verbose_name_plural = 'Жанры'
 
     def __str__(self):
         return self.name
 
 
 class Category(models.Model):
-    name = models.CharField(max_length=256)
+    """Модель для категорий."""
+    name = models.CharField(
+        'Название категории',
+        max_length=256
+    )
     slug = models.SlugField(unique=True)
+
+    class Meta:
+        verbose_name = 'Категория'
+        verbose_name_plural = 'Категории'
 
     def __str__(self):
         return self.name
 
 
 class Title(models.Model):
-    name = models.TextField()
-    year = models.IntegerField()
-    description = models.TextField()
+    """Модель для произведений."""
+    def validate_year(value):
+        if value > timezone.now().year:
+            raise ValidationError(
+                'Нельзя указать год больше текущего'
+            )
+        return value
+
+    name = models.TextField('Название произведения', db_index=True)
+    year = models.IntegerField('Год создания', validators=[validate_year])
+    description = models.TextField('Описание')
     category = models.ForeignKey(
         Category,
         on_delete=models.SET_NULL,
+        verbose_name='Категория',
         blank=True,
         null=True
     )
     genre = models.ManyToManyField(
         Genre,
-        through='GenreTitle'
+        verbose_name='Жанр',
     )
 
-
-class GenreTitle(models.Model):
-    title = models.ForeignKey(Title, on_delete=models.SET_NULL, null=True)
-    genre = models.ForeignKey(Genre, on_delete=models.SET_NULL, null=True)
-
-    def __str__(self):
-        return f'{self.title} {self.genre}'
+    class Meta:
+        verbose_name = 'Произведение'
+        verbose_name_plural = 'Произведения'
 
 
 class Review(models.Model):

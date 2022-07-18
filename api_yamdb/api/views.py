@@ -5,6 +5,7 @@ from auth_yamdb.utils import bland_code_hasher, salty_code_hasher
 from django.contrib.auth import get_user_model
 from django.core.mail import send_mail
 from django.db import IntegrityError
+from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, permissions, serializers, status, viewsets
@@ -14,6 +15,7 @@ from rest_framework.pagination import (LimitOffsetPagination,
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.views import TokenViewBase
+from rest_framework.decorators import action
 from reviews.models import Category, Genre, Review, Title, User
 
 from .filters import TitleFilter
@@ -95,7 +97,7 @@ class CategoriesViewSet(CreateRetrieveDestroyViewSet):
 
 
 class TitlesViewSet(viewsets.ModelViewSet):
-    queryset = Title.objects.all()
+    queryset = Title.objects.annotate(Avg('reviews__score'))
     serializer_class = TitleSerializer
     permission_classes = [RolePermissionsOrReadOnly]
     pagination_class = LimitOffsetPagination
@@ -106,18 +108,6 @@ class TitlesViewSet(viewsets.ModelViewSet):
         if self.action in ('retrieve', 'list'):
             return TitleReadonlySerializer
         return TitleSerializer
-
-    def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
-        headers = self.get_success_headers(serializer.data)
-        title_id = serializer.data['id']
-        return Response(
-            TitleReadonlySerializer(Title.objects.get(pk=title_id)).data,
-            status=status.HTTP_201_CREATED,
-            headers=headers
-        )
 
 
 class ReviewViewSet(viewsets.ModelViewSet):

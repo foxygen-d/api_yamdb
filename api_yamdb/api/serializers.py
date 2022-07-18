@@ -1,10 +1,8 @@
 from http import HTTPStatus
 
 from django.contrib.auth import authenticate, get_user_model
-from django.db.models import Avg
 from django.http import Http404
 from django.shortcuts import get_object_or_404
-from django.utils import timezone
 from rest_framework import serializers
 from rest_framework_simplejwt.tokens import AccessToken
 
@@ -98,29 +96,19 @@ class TitleSerializer(serializers.ModelSerializer):
         fields = '__all__'
         model = Title
 
-    def validate_year(self, value):
-        if value > timezone.now().year:
-            raise serializers.ValidationError(
-                'Нельзя указать год больше текущего'
-            )
-        return value
-
 
 class TitleReadonlySerializer(serializers.ModelSerializer):
     category = CategorySerializer(read_only=True)
     genre = GenreSerializer(read_only=True, many=True)
-    rating = serializers.SerializerMethodField()
+    rating = serializers.FloatField(
+        source='reviews__score__avg',
+        read_only=True
+    )
 
     class Meta:
         fields = ('id', 'name', 'year', 'rating',
                   'description', 'genre', 'category')
         model = Title
-
-    def get_rating(self, obj):
-        if obj.reviews.count():
-            rating = obj.reviews.aggregate(avg_score=Avg('score'))
-            return int(rating.get('avg_score'))
-        return None
 
 
 class ReviewSerializer(serializers.ModelSerializer):
