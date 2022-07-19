@@ -1,7 +1,5 @@
 from http import HTTPStatus
 
-from auth_yamdb.models import ConfirmationCode
-from auth_yamdb.utils import bland_code_hasher, salty_code_hasher
 from django.contrib.auth import get_user_model
 from django.core.mail import send_mail
 from django.db import IntegrityError
@@ -17,6 +15,8 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.views import TokenViewBase
 
+from auth_yamdb.models import ConfirmationCode
+from auth_yamdb.utils import bland_code_hasher, salty_code_hasher
 from reviews.models import Category, Genre, Review, Title, User
 from .filters import TitleFilter
 from .mixins import CreateRetrieveDestroyViewSet
@@ -44,7 +44,6 @@ class SignUpView(APIView):
         user = User.objects.create(**serializer.validated_data)
         code_to_mail = bland_code_hasher(
             *serializer.validated_data.values())
-        print(code_to_mail)
         code_to_db = salty_code_hasher(code_to_mail)
         username, mail = serializer.validated_data.values()
         send_mail(
@@ -127,13 +126,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         title = get_object_or_404(Title, id=self.kwargs.get('title_id'))
-        try:
-            serializer.save(author=self.request.user, title=title)
-        except IntegrityError:
-            raise serializers.ValidationError(
-                detail="Nobody wants your opinion the second time",
-                code=HTTPStatus.BAD_REQUEST
-            )
+        serializer.save(author=self.request.user, title=title)
 
 
 class CommentsViewSet(viewsets.ModelViewSet):
