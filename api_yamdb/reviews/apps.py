@@ -1,6 +1,6 @@
 from django.apps import AppConfig
-from django.db.models.signals import post_migrate
 from django.contrib.auth import get_user_model
+from django.db.models.signals import post_migrate
 
 from reviews.utils import set_by_id, get_csv_data
 
