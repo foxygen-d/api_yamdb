@@ -1,13 +1,10 @@
-from http import HTTPStatus
-
 from django.contrib.auth import get_user_model
 from django.core.mail import send_mail
-from django.db import IntegrityError
 from django.db.models import Avg
 from django.conf import settings
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import filters, permissions, serializers, viewsets
+from rest_framework import filters, permissions, viewsets
 from rest_framework.decorators import action
 from rest_framework.pagination import (LimitOffsetPagination,
                                        PageNumberPagination)
